@@ -3,14 +3,47 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ShoppingBagIcon, Bars3Icon, MagnifyingGlassIcon, UserIcon, HeartIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import ClosableBanner from './ClosableBanner'
 
 export default function FixedNavigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isBannerVisible, setIsBannerVisible] = useState(true)
+
+  // 检查公告栏是否可见
+  useEffect(() => {
+    const checkBannerVisibility = () => {
+      if (typeof window !== 'undefined') {
+        const isGoldenSeasonClosed = localStorage.getItem('golden-season-banner') === 'closed'
+        setIsBannerVisible(!isGoldenSeasonClosed)
+      }
+    }
+
+    checkBannerVisibility()
+    
+    // 监听存储变化
+    const handleStorageChange = () => {
+      checkBannerVisibility()
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // 监听自定义事件（当在同一页面关闭横幅时）
+    const handleBannerClose = () => {
+      setIsBannerVisible(false)
+    }
+    
+    window.addEventListener('bannerClosed', handleBannerClose)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('bannerClosed', handleBannerClose)
+    }
+  }, [])
 
   const navigationItems = [
-    { name: '首页', href: '/', isActive: pathname === '/' },
+    { name: 'Store', href: '/', isActive: pathname === '/' },
     { name: 'Mobile', href: '/products/mobile', isActive: pathname.startsWith('/products/mobile') },
     { name: 'Wearables', href: '/products/wearables', isActive: pathname.startsWith('/products/wearables') },
     { name: 'Smart Home', href: '/products/smart-home', isActive: pathname.startsWith('/products/smart-home') },
@@ -24,14 +57,19 @@ export default function FixedNavigation() {
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-orange-500 text-white text-center py-2 text-sm relative z-50">
+      <ClosableBanner 
+        className="bg-orange-500 text-white text-center py-2 text-sm relative z-50"
+        storageKey="golden-season-banner"
+      >
         <div className="max-w-7xl mx-auto px-4">
           Golden Season Sale - Enjoy Up to 50% Off Smart Tech. 18th Sep. - 10th Oct.
         </div>
-      </div>
+      </ClosableBanner>
 
       {/* Fixed Navigation */}
-      <header className="fixed top-8 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-40">
+      <header className={`fixed left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-40 transition-all duration-300 ${
+        isBannerVisible ? 'top-8' : 'top-0'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -40,7 +78,7 @@ export default function FixedNavigation() {
                 <div className="w-8 h-8 bg-orange-500 rounded-sm flex items-center justify-center mr-3">
                   <span className="text-white font-bold text-sm">Mi</span>
                 </div>
-                <span className="text-xl font-semibold text-gray-900 hidden sm:block">Mi Store</span>
+                <span className="text-xl font-semibold text-gray-900 hidden sm:block">Xiaomi UK</span>
               </Link>
             </div>
 
