@@ -1,0 +1,311 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  phone       String?  @unique
+  password    String
+  name        String?
+  avatar      String?
+  role        Role     @default(USER)
+  isNewUser   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  addresses   Address[]
+  orders      Order[]
+  coupons     UserCoupon[]
+  lotteryLogs LotteryLog[]
+  cartItems   CartItem[]
+
+  @@map("users")
+}
+
+// 用户角色枚举
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// 收货地址模型
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  name      String
+  phone     String
+  province  String
+  city      String
+  district  String
+  detail    String
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// 商品分类模型
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  image       String?
+  parentId    String?
+  sort        Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@map("categories")
+}
+
+// 商品模型
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  images      String[]
+  stock       Int      @default(0)
+  sold        Int      @default(0)
+  categoryId  String
+  specs       Json?    // 商品规格参数
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+
+  @@map("products")
+}
+
+// 购物车模型
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+// 订单模型
+model Order {
+  id            String      @id @default(cuid())
+  orderNo       String      @unique
+  userId        String
+  addressId     String
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal    @default(0) @db.Decimal(10, 2)
+  finalAmount   Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDING)
+  paymentMethod String?
+  paymentId     String?
+  shippingFee   Decimal     @default(0) @db.Decimal(10, 2)
+  remark        String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  address    Address     @relation(fields: [addressId], references: [id])
+  items      OrderItem[]
+  coupons    OrderCoupon[]
+
+  @@map("orders")
+}
+
+// 订单状态枚举
+enum OrderStatus {
+  PENDING     // 待付款
+  PAID        // 已付款
+  SHIPPED     // 已发货
+  DELIVERED   // 已送达
+  CANCELLED   // 已取消
+  REFUNDED    // 已退款
+}
+
+// 订单商品模型
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// 优惠券模型
+model Coupon {
+  id          String     @id @default(cuid())
+  name        String
+  code        String     @unique
+  type        CouponType
+  value       Decimal    @db.Decimal(10, 2) // 折扣值或减免金额
+  minAmount   Decimal?   @db.Decimal(10, 2) // 最小使用金额
+  maxDiscount Decimal?   @db.Decimal(10, 2) // 最大折扣金额
+  startDate   DateTime
+  endDate     DateTime
+  totalCount  Int        // 总发放数量
+  usedCount   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userCoupons  UserCoupon[]
+  orderCoupons OrderCoupon[]
+
+  @@map("coupons")
+}
+
+// 优惠券类型枚举
+enum CouponType {
+  DISCOUNT    // 折扣券
+  AMOUNT      // 满减券
+  FREE_SHIPPING // 免邮券
+  FREE_ORDER  // 免单券
+}
+
+// 用户优惠券关联模型
+model UserCoupon {
+  id       String            @id @default(cuid())
+  userId   String
+  couponId String
+  status   UserCouponStatus  @default(UNUSED)
+  usedAt   DateTime?
+  createdAt DateTime         @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, couponId])
+  @@map("user_coupons")
+}
+
+// 用户优惠券状态枚举
+enum UserCouponStatus {
+  UNUSED    // 未使用
+  USED      // 已使用
+  EXPIRED   // 已过期
+}
+
+// 订单优惠券关联模型
+model OrderCoupon {
+  id       String  @id @default(cuid())
+  orderId  String
+  couponId String
+  discount Decimal @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@map("order_coupons")
+}
+
+// 抽奖活动模型
+model LotteryActivity {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  maxParticipants Int? // 最大参与人数
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prizes LotteryPrize[]
+  logs   LotteryLog[]
+
+  @@map("lottery_activities")
+}
+
+// 抽奖奖品模型
+model LotteryPrize {
+  id         String     @id @default(cuid())
+  activityId String
+  name       String
+  type       PrizeType
+  value      String?    // 奖品值（如优惠券ID、商品ID等）
+  probability Decimal  @db.Decimal(5, 4) // 中奖概率（0-1）
+  totalCount Int       // 总奖品数量
+  wonCount   Int       @default(0) // 已中奖数量
+  createdAt  DateTime  @default(now())
+
+  activity LotteryActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  logs     LotteryLog[]
+
+  @@map("lottery_prizes")
+}
+
+// 奖品类型枚举
+enum PrizeType {
+  COUPON    // 优惠券
+  PRODUCT   // 实物商品
+  POINTS    // 积分
+  NONE      // 谢谢参与
+}
+
+// 抽奖记录模型
+model LotteryLog {
+  id         String    @id @default(cuid())
+  userId     String
+  activityId String
+  prizeId    String?
+  isWinner   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity LotteryActivity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  prize    LotteryPrize?    @relation(fields: [prizeId], references: [id])
+
+  @@unique([userId, activityId])
+  @@map("lottery_logs")
+}
+
+// 系统配置模型
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
