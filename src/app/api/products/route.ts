@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     // 验证管理员权限
     const user = getUserFromRequest(request)
     console.log('用户信息:', user)
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }

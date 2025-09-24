@@ -39,100 +39,43 @@ export default function ProductsPage() {
   const productsPerPage = 10
 
   useEffect(() => {
-    // 模拟获取商品数据
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: '小米智能台灯Pro',
-        description: '护眼台灯，支持App控制，多种照明模式',
-        price: 199,
-        originalPrice: 299,
-        category: '照明设备',
-        brand: '小米',
-        stock: 156,
-        status: 'active',
-        image: '💡',
-        createdAt: '2024-01-10',
-        sales: 1234,
-        rating: 4.8
-      },
-      {
-        id: '2',
-        name: '华为智能音箱',
-        description: '智能语音助手，高品质音效，智能家居控制中心',
-        price: 299,
-        originalPrice: 399,
-        category: '音响设备',
-        brand: '华为',
-        stock: 89,
-        status: 'active',
-        image: '🔊',
-        createdAt: '2024-01-08',
-        sales: 856,
-        rating: 4.6
-      },
-      {
-        id: '3',
-        name: '小米扫地机器人',
-        description: '智能路径规划，自动充电，App远程控制',
-        price: 1299,
-        originalPrice: 1599,
-        category: '清洁设备',
-        brand: '小米',
-        stock: 45,
-        status: 'active',
-        image: '🤖',
-        createdAt: '2024-01-05',
-        sales: 567,
-        rating: 4.7
-      },
-      {
-        id: '4',
-        name: '智能门锁',
-        description: '指纹识别，密码开锁，远程监控',
-        price: 899,
-        originalPrice: 1199,
-        category: '安防设备',
-        brand: '德施曼',
-        stock: 0,
-        status: 'out_of_stock',
-        image: '🔐',
-        createdAt: '2024-01-03',
-        sales: 234,
-        rating: 4.5
-      },
-      {
-        id: '5',
-        name: '智能摄像头',
-        description: '1080P高清，夜视功能，移动侦测',
-        price: 399,
-        originalPrice: 499,
-        category: '安防设备',
-        brand: '海康威视',
-        stock: 123,
-        status: 'active',
-        image: '📹',
-        createdAt: '2024-01-01',
-        sales: 789,
-        rating: 4.4
-      },
-      {
-        id: '6',
-        name: '智能插座',
-        description: '远程控制，定时开关，用电统计',
-        price: 59,
-        originalPrice: 89,
-        category: '控制设备',
-        brand: '公牛',
-        stock: 234,
-        status: 'inactive',
-        image: '🔌',
-        createdAt: '2023-12-28',
-        sales: 1567,
-        rating: 4.3
+    // 获取商品数据
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data?.products) {
+            // 转换API数据格式为前端需要的格式
+            const formattedProducts: Product[] = result.data.products.map((product: any) => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              price: parseFloat(product.price),
+              originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
+              category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
+              brand: '未知品牌', // API中没有brand字段，使用默认值
+              stock: product.stock,
+              status: product.isActive ? 'active' : 'inactive',
+              image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
+              createdAt: new Date(product.createdAt).toLocaleDateString(),
+              sales: product.sold || 0,
+              rating: 4.5 // 默认评分，API中没有此字段
+            }))
+            setProducts(formattedProducts)
+          }
+        } else {
+          console.error('获取商品数据失败:', response.statusText)
+        }
+      } catch (error) {
+        console.error('获取商品数据出错:', error)
       }
-    ]
-    setProducts(mockProducts)
+    }
+
+    fetchProducts()
   }, [])
 
   // 获取所有分类
@@ -172,7 +115,40 @@ export default function ProductsPage() {
 
   const handleAddSuccess = () => {
     // 重新加载商品数据
-    window.location.reload()
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data?.products) {
+            // 转换API数据格式为前端需要的格式
+            const formattedProducts: Product[] = result.data.products.map((product: any) => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              price: parseFloat(product.price),
+              originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
+              category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
+              brand: '未知品牌', // API中没有brand字段，使用默认值
+              stock: product.stock,
+              status: product.isActive ? 'active' : 'inactive',
+              image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
+              createdAt: new Date(product.createdAt).toLocaleDateString(),
+              sales: product.sold || 0,
+              rating: 4.5 // 默认评分，API中没有此字段
+            }))
+            setProducts(formattedProducts)
+          }
+        }
+      } catch (error) {
+        console.error('重新获取商品数据出错:', error)
+      }
+    }
+    
+    fetchProducts()
   }
 
   const handleDeleteProduct = (productId: string) => {

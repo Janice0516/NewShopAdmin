@@ -93,6 +93,7 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 添加认证信息
         body: JSON.stringify(submitData)
       })
 

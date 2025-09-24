@@ -70,7 +70,7 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push('/lottery') // Redirect to lottery page after successful registration
+        router.push('/') // Redirect to home page after successful registration
       } else {
         setError(data.error || 'Registration failed')
       }

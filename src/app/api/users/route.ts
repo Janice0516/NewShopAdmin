@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }
@@ -215,7 +215,7 @@ export async function PUT(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }
@@ -272,7 +272,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }

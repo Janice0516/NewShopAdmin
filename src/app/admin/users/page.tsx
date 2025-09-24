@@ -35,70 +35,41 @@ export default function UsersPage() {
   const usersPerPage = 10
 
   useEffect(() => {
-    // 模拟获取用户数据
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        name: '张三',
-        email: 'zhangsan@example.com',
-        phone: '13800138000',
-        role: 'user',
-        status: 'active',
-        createdAt: '2024-01-10',
-        lastLogin: '2024-01-15',
-        orders: 5,
-        totalSpent: 1299
-      },
-      {
-        id: '2',
-        name: '李四',
-        email: 'lisi@example.com',
-        phone: '13900139000',
-        role: 'user',
-        status: 'active',
-        createdAt: '2024-01-08',
-        lastLogin: '2024-01-14',
-        orders: 3,
-        totalSpent: 899
-      },
-      {
-        id: '3',
-        name: '王五',
-        email: 'wangwu@example.com',
-        phone: '13700137000',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2024-01-05',
-        lastLogin: '2024-01-15',
-        orders: 0,
-        totalSpent: 0
-      },
-      {
-        id: '4',
-        name: '赵六',
-        email: 'zhaoliu@example.com',
-        phone: '13600136000',
-        role: 'user',
-        status: 'inactive',
-        createdAt: '2024-01-03',
-        lastLogin: '2024-01-10',
-        orders: 1,
-        totalSpent: 199
-      },
-      {
-        id: '5',
-        name: '钱七',
-        email: 'qianqi@example.com',
-        phone: '13500135000',
-        role: 'user',
-        status: 'active',
-        createdAt: '2024-01-01',
-        lastLogin: '2024-01-13',
-        orders: 8,
-        totalSpent: 2599
+    // 获取用户数据
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'GET',
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data.users) {
+            // 转换数据格式以匹配前端接口
+            const formattedUsers = data.data.users.map((user: any) => ({
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone || '',
+              role: user.role.toLowerCase(),
+              status: 'active', // 默认状态，因为数据库中没有status字段
+              createdAt: new Date(user.createdAt).toLocaleDateString(),
+              lastLogin: new Date(user.updatedAt).toLocaleDateString(),
+              orders: user._count?.orders || 0,
+              totalSpent: 0 // 暂时设为0，后续可以从订单数据计算
+            }))
+            setUsers(formattedUsers)
+          }
+        } else {
+          console.error('获取用户数据失败:', response.status)
+        }
+      } catch (error) {
+        console.error('获取用户数据错误:', error)
       }
-    ]
-    setUsers(mockUsers)
+    }
+
+    fetchUsers()
   }, [])
 
   // 过滤用户
