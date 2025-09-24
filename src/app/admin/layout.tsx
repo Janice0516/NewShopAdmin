@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import {
   HomeIcon,
   UsersIcon,
@@ -34,14 +35,23 @@ const menuItems: MenuItem[] = [
   { name: '系统设置', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 
-export default function AdminLayout({
+// Loading component that matches the server-rendered structure
+const LoadingLayout = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <p className="text-gray-500 text-lg">加载中...</p>
+    </div>
+  </div>
+)
+
+function AdminLayoutContent({
   children,
 }: {
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<{ name: string; role: string } | null>(null)
-  const [isClient, setIsClient] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -51,8 +61,6 @@ export default function AdminLayout({
   }
 
   useEffect(() => {
-    setIsClient(true)
-    
     // 检查管理员权限
     const checkAuth = async () => {
       try {
@@ -95,11 +103,13 @@ export default function AdminLayout({
       } catch (error) {
         console.error('权限验证失败:', error)
         router.push('/admin/login')
+      } finally {
+        setIsLoading(false)
       }
     }
     
     checkAuth()
-  }, [])
+  }, [pathname, router])
 
   const handleLogout = () => {
     // 实际应用中应该调用登出API
@@ -107,14 +117,8 @@ export default function AdminLayout({
   }
 
   // 在客户端渲染完成前显示加载状态
-  if (!isClient || !user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 text-lg">加载中...</p>
-        </div>
-      </div>
-    )
+  if (isLoading || !user) {
+    return <LoadingLayout />
   }
 
   return (
@@ -217,4 +221,18 @@ export default function AdminLayout({
       </div>
     </div>
   )
+}
+
+// Use dynamic import to prevent hydration mismatch
+const DynamicAdminLayout = dynamic(() => Promise.resolve(AdminLayoutContent), {
+  ssr: false,
+  loading: () => <LoadingLayout />
+})
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <DynamicAdminLayout>{children}</DynamicAdminLayout>
 }

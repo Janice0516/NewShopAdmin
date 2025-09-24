@@ -42,13 +42,13 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/products"
+                  href="/uk/store"
                   className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors text-center"
                 >
                   Buy Now
                 </Link>
                 <Link
-                  href="/products"
+                  href="/uk/store"
                   className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors text-center"
                 >
                   View Details
@@ -102,7 +102,7 @@ export default function HomePage() {
             ].map((category, index) => (
               <Link
                 key={index}
-                href="/products"
+                href="/uk/store"
                 className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
               >
                 <div className={`bg-gradient-to-br ${category.color} p-6 text-white relative`}>
@@ -242,12 +242,12 @@ export default function HomePage() {
             <div>
               <h5 className="text-lg font-semibold mb-6 text-white">SHOP AND LEARN</h5>
               <ul className="space-y-3 text-sm text-gray-300">
-                <li><Link href="/products" className="hover:text-white transition-colors">All Products</Link></li>
-                <li><Link href="/products/xiaomi-series" className="hover:text-white transition-colors">Xiaomi Series</Link></li>
-                <li><Link href="/products/redmi-series" className="hover:text-white transition-colors">Redmi Series</Link></li>
-                <li><Link href="/products/poco" className="hover:text-white transition-colors">POCO</Link></li>
-                <li><Link href="/products/smart-home" className="hover:text-white transition-colors">Smart Home</Link></li>
-                <li><Link href="/products/lifestyle" className="hover:text-white transition-colors">Lifestyle</Link></li>
+                <li><Link href="/uk/store" className="hover:text-white transition-colors">All Products</Link></li>
+                <li><Link href="/uk/store/xiaomi-series" className="hover:text-white transition-colors">Xiaomi Series</Link></li>
+                <li><Link href="/uk/store/redmi-series" className="hover:text-white transition-colors">Redmi Series</Link></li>
+                <li><Link href="/uk/store/poco" className="hover:text-white transition-colors">POCO</Link></li>
+                <li><Link href="/uk/store/smart-home" className="hover:text-white transition-colors">Smart Home</Link></li>
+                <li><Link href="/uk/store/lifestyle" className="hover:text-white transition-colors">Lifestyle</Link></li>
                 <li><Link href="/business" className="hover:text-white transition-colors">Xiaomi for Business</Link></li>
                 <li><Link href="/hyperos" className="hover:text-white transition-colors">HyperOS</Link></li>
                 <li><Link href="/news" className="hover:text-white transition-colors">Xiaomi News</Link></li>

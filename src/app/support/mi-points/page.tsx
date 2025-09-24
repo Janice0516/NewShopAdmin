@@ -213,10 +213,10 @@ const MiPointsPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Shop</h3>
               <ul className="space-y-2">
-                <li><Link href="/products/phones" className="text-gray-300 hover:text-white transition-colors">Smartphones</Link></li>
-                <li><Link href="/products/laptops" className="text-gray-300 hover:text-white transition-colors">Laptops</Link></li>
-                <li><Link href="/products/tablets" className="text-gray-300 hover:text-white transition-colors">Tablets</Link></li>
-                <li><Link href="/products/accessories" className="text-gray-300 hover:text-white transition-colors">Accessories</Link></li>
+                <li><Link href="/uk/store/phones" className="text-gray-300 hover:text-white transition-colors">Smartphones</Link></li>
+                <li><Link href="/uk/store/laptops" className="text-gray-300 hover:text-white transition-colors">Laptops</Link></li>
+                <li><Link href="/uk/store/tablets" className="text-gray-300 hover:text-white transition-colors">Tablets</Link></li>
+                <li><Link href="/uk/store/accessories" className="text-gray-300 hover:text-white transition-colors">Accessories</Link></li>
               </ul>
             </div>
 

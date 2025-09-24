@@ -146,7 +146,7 @@ export default function CartPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">购物车是空的</h2>
             <p className="text-gray-600 mb-8">快去挑选您喜欢的商品吧！</p>
             <Link
-              href="/products"
+              href="/uk/store"
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               去购物
@@ -195,7 +195,7 @@ export default function CartPage() {
                         {/* 商品信息 */}
                         <div className="flex-1 min-w-0">
                           <Link
-                            href={`/products/${item.productId}`}
+                            href={`/uk/store/${item.productId}`}
                             className="text-lg font-medium text-gray-900 hover:text-blue-600"
                           >
                             {item.name}
@@ -303,7 +303,7 @@ export default function CartPage() {
 
                 <div className="mt-4 text-center">
                   <Link
-                    href="/products"
+                    href="/uk/store"
                     className="text-blue-600 hover:text-blue-500 text-sm"
                   >
                     继续购物

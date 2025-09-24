@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { validateProduct, defaultProductRules, ProductValidationResult } from '@/utils/validation'
+import ImageUpload from './ImageUpload'
 
 interface Category {
   id: string
@@ -8,22 +10,25 @@ interface Category {
 }
 
 interface AddProductModalProps {
+  isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (newProduct?: any) => void
 }
 
-export default function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     stock: '',
     categoryId: '',
-    images: ['']
+    images: [] as string[]
   })
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     fetchCategories()
@@ -41,37 +46,53 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
     }
   }
 
+  // 实时验证函数
+  const validateField = (fieldName: string, value: any) => {
+    const fieldData = { ...formData, [fieldName]: value }
+    const result = validateProduct(fieldData, defaultProductRules)
+    
+    setValidationErrors(prev => ({
+      ...prev,
+      [fieldName]: result.errors[fieldName] || []
+    }))
+    
+    return result.errors[fieldName]?.length === 0
+  }
+
+  // 验证所有字段
+  const validateAllFields = () => {
+    const result = validateProduct(formData, defaultProductRules)
+    setValidationErrors(result.errors)
+    return result.isValid
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
+    
+    // 实时验证
+    if (touched[name]) {
+      validateField(name, value)
+    }
   }
 
-  const handleImageChange = (index: number, value: string) => {
-    const newImages = [...formData.images]
-    newImages[index] = value
+  const handleBlur = (fieldName: string) => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }))
+    validateField(fieldName, formData[fieldName as keyof typeof formData])
+  }
+
+  const handleImageChange = (images: string[]) => {
     setFormData(prev => ({
       ...prev,
-      images: newImages
+      images
     }))
-  }
-
-  const addImageField = () => {
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, '']
-    }))
-  }
-
-  const removeImageField = (index: number) => {
-    if (formData.images.length > 1) {
-      const newImages = formData.images.filter((_, i) => i !== index)
-      setFormData(prev => ({
-        ...prev,
-        images: newImages
-      }))
+    
+    // 实时验证图片
+    if (touched.images) {
+      validateField('images', images)
     }
   }
 
@@ -79,6 +100,14 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // 提交前进行完整验证
+    const isValid = validateAllFields()
+    if (!isValid) {
+      setError('请修正表单中的错误后再提交')
+      setLoading(false)
+      return
+    }
 
     try {
       const submitData = {
@@ -93,16 +122,21 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // 添加认证信息
+        credentials: 'include',
         body: JSON.stringify(submitData)
       })
 
+      const result = await response.json()
+
       if (response.ok) {
-        onSuccess()
+        onSuccess(result.data) // 传递新创建的商品数据
         onClose()
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || '添加商品失败')
+        // 处理服务器端验证错误
+        if (result.details) {
+          setValidationErrors(result.details)
+        }
+        setError(result.message || result.error || '添加商品失败')
       }
     } catch (error) {
       setError('网络错误，请重试')
@@ -142,10 +176,16 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
               name="name"
               value={formData.name}
               onChange={handleInputChange}
+              onBlur={() => handleBlur('name')}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
+                validationErrors.name?.length > 0 ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="请输入商品名称"
             />
+            {validationErrors.name?.length > 0 && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.name[0]}</p>
+            )}
           </div>
 
           <div>
@@ -156,10 +196,16 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
               name="description"
               value={formData.description}
               onChange={handleInputChange}
+              onBlur={() => handleBlur('description')}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
+                validationErrors.description?.length > 0 ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="请输入商品描述"
             />
+            {validationErrors.description?.length > 0 && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.description[0]}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -172,12 +218,18 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
+                onBlur={() => handleBlur('price')}
                 required
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
+                  validationErrors.price?.length > 0 ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="0.00"
               />
+              {validationErrors.price?.length > 0 && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.price[0]}</p>
+              )}
             </div>
 
             <div>
@@ -189,11 +241,17 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
                 name="stock"
                 value={formData.stock}
                 onChange={handleInputChange}
+                onBlur={() => handleBlur('stock')}
                 required
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
+                  validationErrors.stock?.length > 0 ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="0"
               />
+              {validationErrors.stock?.length > 0 && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.stock[0]}</p>
+              )}
             </div>
           </div>
 
@@ -205,49 +263,38 @@ export default function AddProductModal({ onClose, onSuccess }: AddProductModalP
               name="categoryId"
               value={formData.categoryId}
               onChange={handleInputChange}
+              onBlur={() => handleBlur('categoryId')}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
+                validationErrors.categoryId?.length > 0 ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              <option value="">请选择分类</option>
+              <option value="" className="text-gray-500">请选择分类</option>
               {categories.map(category => (
-                <option key={category.id} value={category.id}>
+                <option key={category.id} value={category.id} className="text-gray-900">
                   {category.name}
                 </option>
               ))}
             </select>
+            {validationErrors.categoryId?.length > 0 && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.categoryId[0]}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               商品图片
             </label>
-            {formData.images.map((image, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="url"
-                  value={image}
-                  onChange={(e) => handleImageChange(index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="请输入图片URL"
-                />
-                {formData.images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeImageField(index)}
-                    className="px-3 py-2 text-red-600 hover:text-red-800"
-                  >
-                    删除
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addImageField}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              + 添加图片
-            </button>
+            <ImageUpload
+              images={formData.images}
+              onChange={handleImageChange}
+              maxImages={5}
+              maxFileSize={5}
+              onError={(error) => setError(error)}
+            />
+            {validationErrors.images?.length > 0 && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.images[0]}</p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

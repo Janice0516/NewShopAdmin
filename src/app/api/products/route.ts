@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getUserFromRequest } from '@/lib/auth'
+import { validateProduct, defaultProductRules } from '@/utils/validation'
+import { prisma } from '@/lib/prisma'
+import { apiLimiter, rateLimit } from '@/middleware/rateLimit'
 
-const prisma = new PrismaClient()
+// 使用共享的Prisma实例而不是创建新实例
+// const prisma = new PrismaClient()
+
+// 内存缓存
+interface CacheEntry {
+  data: any
+  timestamp: number
+  etag: string
+}
+
+const cache = new Map<string, CacheEntry>()
+const CACHE_TTL = 60000 // 增加到60秒缓存时间以减少数据库压力
+
+// 生成ETag用于缓存验证
+function generateETag(data: any): string {
+  return Buffer.from(JSON.stringify(data)).toString('base64').slice(0, 16)
+}
 
 interface ProductStats {
   status: string
@@ -11,8 +30,14 @@ interface ProductStats {
   }
 }
 
-// GET /api/products - 获取商品列表
+// GET /api/products - 获取商品列表（支持增量同步）
 export async function GET(request: NextRequest) {
+  // 应用限流
+  const rateLimitResponse = rateLimit(apiLimiter)(request)
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -22,6 +47,38 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || ''
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const lastModified = searchParams.get('lastModified')
+
+    // 生成缓存键
+    const cacheKey = `products:${page}:${limit}:${search}:${category}:${status}:${sortBy}:${sortOrder}`
+    
+    // 检查缓存
+    const cached = cache.get(cacheKey)
+    const now = Date.now()
+    
+    // 如果有缓存且未过期
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+      // 检查客户端的If-Modified-Since头
+      const ifModifiedSince = request.headers.get('If-Modified-Since')
+      if (ifModifiedSince && new Date(ifModifiedSince) >= new Date(cached.timestamp)) {
+        return new NextResponse(null, { 
+          status: 304,
+          headers: {
+            'ETag': cached.etag,
+            'Cache-Control': 'public, max-age=30',
+            'Last-Modified': new Date(cached.timestamp).toUTCString()
+          }
+        })
+      }
+      
+      return NextResponse.json(cached.data, {
+        headers: {
+          'ETag': cached.etag,
+          'Cache-Control': 'public, max-age=30',
+          'Last-Modified': new Date(cached.timestamp).toUTCString()
+        }
+      })
+    }
 
     const skip = (page - 1) * limit
 
@@ -44,6 +101,13 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
+    // 如果提供了lastModified，只返回更新的数据
+    if (lastModified) {
+      where.updatedAt = {
+        gt: new Date(lastModified)
+      }
+    }
+
     // 获取商品列表
     const products = await prisma.product.findMany({
       where,
@@ -64,25 +128,15 @@ export async function GET(request: NextRequest) {
     // 获取总数
     const total = await prisma.product.count({ where })
 
-    // 计算统计数据 - 注意：Product模型中没有status字段
-    // const stats = await prisma.product.groupBy({
-    //   by: ['status'],
-    //   _count: {
-    //     id: true
-    //   }
-    // }) as ProductStats[]
-
+    // 计算统计数据
     const statusStats = {
-      // active: stats.find(s => s.status === 'active')?._count.id || 0,
-      // inactive: stats.find(s => s.status === 'inactive')?._count.id || 0,
-      // draft: stats.find(s => s.status === 'draft')?._count.id || 0
       active: 0,
       inactive: 0,
       draft: 0,
       outOfStock: 0
     }
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         products,
@@ -92,7 +146,26 @@ export async function GET(request: NextRequest) {
           total,
           totalPages: Math.ceil(total / limit)
         },
-        stats: statusStats
+        stats: statusStats,
+        timestamp: now
+      }
+    }
+
+    // 生成ETag
+    const etag = generateETag(responseData)
+    
+    // 更新缓存
+    cache.set(cacheKey, {
+      data: responseData,
+      timestamp: now,
+      etag
+    })
+
+    return NextResponse.json(responseData, {
+      headers: {
+        'ETag': etag,
+        'Cache-Control': 'public, max-age=30',
+        'Last-Modified': new Date(now).toUTCString()
       }
     })
   } catch (error) {
@@ -102,6 +175,17 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// 清除相关缓存
+function clearProductCache() {
+  const keysToDelete: string[] = []
+  for (const key of cache.keys()) {
+    if (key.startsWith('products:')) {
+      keysToDelete.push(key)
+    }
+  }
+  keysToDelete.forEach(key => cache.delete(key))
 }
 
 // POST /api/products - 创建新商品
@@ -127,38 +211,73 @@ export async function POST(request: NextRequest) {
       images
     } = body
 
-    // 验证必填字段
-    if (!name || !price || !categoryId) {
+    // 使用完善的数据校验系统
+    const validationResult = validateProduct(body, defaultProductRules)
+    
+    if (!validationResult.isValid) {
+      const errorMessages = Object.values(validationResult.errors).flat()
       return NextResponse.json(
-        { success: false, error: '缺少必填字段' },
+        { 
+          success: false, 
+          error: '数据验证失败', 
+          details: validationResult.errors,
+          message: errorMessages.join('; ')
+        },
         { status: 400 }
       )
     }
 
-    // 检查SKU是否已存在 - 注意：Product模型中没有sku字段
-    // const existingProduct = await prisma.product.findUnique({
-    //   where: { sku }
-    // })
+    // 额外的业务逻辑验证
+    // 检查分类是否存在
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId }
+    })
 
-    // if (existingProduct) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'SKU已存在' },
-    //     { status: 400 }
-    //   )
-    // }
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: '指定的商品分类不存在' },
+        { status: 400 }
+      )
+    }
+
+    // 检查商品名称是否重复
+    const existingProduct = await prisma.product.findFirst({
+      where: { 
+        name: name.trim(),
+        categoryId: categoryId
+      }
+    })
+
+    if (existingProduct) {
+      return NextResponse.json(
+        { success: false, error: '该分类下已存在同名商品' },
+        { status: 400 }
+      )
+    }
 
     // 创建商品
     const product = await prisma.product.create({
       data: {
-        name,
-        description,
+        name: name.trim(),
+        description: description?.trim() || null,
         price: parseFloat(price),
         categoryId,
         images: images || [],
         stock: parseInt(stock) || 0,
         isActive: true
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     })
+
+    // 清除缓存以确保数据一致性
+    clearProductCache()
 
     return NextResponse.json({
       success: true,
@@ -208,6 +327,9 @@ export async function PUT(request: NextRequest) {
         updatedAt: new Date()
       }
     })
+
+    // 清除缓存以确保数据一致性
+    clearProductCache()
 
     return NextResponse.json({
       success: true,
@@ -269,6 +391,9 @@ export async function DELETE(request: NextRequest) {
         }
       }
     })
+
+    // 清除缓存以确保数据一致性
+    clearProductCache()
 
     return NextResponse.json({
       success: true,

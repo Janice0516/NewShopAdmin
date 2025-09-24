@@ -132,7 +132,7 @@ export default function LotteryPage() {
                 智能家居商城
               </Link>
               <nav className="flex space-x-8">
-                <Link href="/products" className="text-gray-700 hover:text-gray-900">
+                <Link href="/uk/store" className="text-gray-700 hover:text-gray-900">
                   商品
                 </Link>
                 <Link href="/cart" className="text-gray-700 hover:text-gray-900">
@@ -172,7 +172,7 @@ export default function LotteryPage() {
               智能家居商城
             </Link>
             <nav className="flex space-x-8">
-              <Link href="/products" className="text-white/80 hover:text-white">
+              <Link href="/uk/store" className="text-white/80 hover:text-white">
                 商品
               </Link>
               <Link href="/cart" className="text-white/80 hover:text-white">
@@ -264,7 +264,7 @@ export default function LotteryPage() {
 
                   <div className="flex justify-center space-x-4">
                     <Link
-                      href="/products"
+                      href="/uk/store"
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       去购物

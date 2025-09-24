@@ -44,11 +44,11 @@ export default function FixedNavigation() {
 
   const navigationItems = [
     { name: 'Store', href: '/', isActive: pathname === '/' },
-    { name: 'Mobile', href: '/products/mobile', isActive: pathname.startsWith('/products/mobile') },
-    { name: 'Wearables', href: '/products/wearables', isActive: pathname.startsWith('/products/wearables') },
-    { name: 'Smart Home', href: '/products/smart-home', isActive: pathname.startsWith('/products/smart-home') },
-    { name: 'Lifestyle', href: '/products/lifestyle', isActive: pathname.startsWith('/products/lifestyle') },
-    { name: 'POCO', href: '/products/poco', isActive: pathname.startsWith('/products/poco') },
+    { name: 'Mobile', href: '/uk/store/mobile', isActive: pathname.startsWith('/uk/store/mobile') },
+    { name: 'Wearables', href: '/uk/store/wearables', isActive: pathname.startsWith('/uk/store/wearables') },
+    { name: 'Smart Home', href: '/uk/store/smart-home', isActive: pathname.startsWith('/uk/store/smart-home') },
+    { name: 'Lifestyle', href: '/uk/store/lifestyle', isActive: pathname.startsWith('/uk/store/lifestyle') },
+    { name: 'POCO', href: '/uk/store/poco', isActive: pathname.startsWith('/uk/store/poco') },
     { name: 'Discover', href: '/discover', isActive: pathname.startsWith('/discover') },
     { name: 'Support', href: '/support', isActive: pathname.startsWith('/support') },
     { name: 'Community', href: '/community', isActive: pathname.startsWith('/community') },

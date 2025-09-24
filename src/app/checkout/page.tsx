@@ -148,8 +148,8 @@ export default function CheckoutPage() {
               智能家居商城
             </Link>
             <nav className="flex space-x-8">
-              <Link href="/products" className="text-gray-700 hover:text-gray-900">
-                商品
+              <Link href="/uk/store" className="text-gray-700 hover:text-gray-900">
+                继续购物
               </Link>
               <Link href="/cart" className="text-gray-700 hover:text-gray-900">
                 购物车

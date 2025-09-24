@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import AddProductModal from '@/components/AddProductModal'
+import { useRealTimeSync } from '@/hooks/useRealTimeSync'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -28,7 +29,6 @@ interface Product {
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -38,45 +38,46 @@ export default function ProductsPage() {
 
   const productsPerPage = 10
 
-  useEffect(() => {
-    // 获取商品数据
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products', {
-          credentials: 'include'
-        })
-        
-        if (response.ok) {
-          const result = await response.json()
-          if (result.success && result.data?.products) {
-            // 转换API数据格式为前端需要的格式
-            const formattedProducts: Product[] = result.data.products.map((product: any) => ({
-              id: product.id,
-              name: product.name,
-              description: product.description,
-              price: parseFloat(product.price),
-              originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
-              category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
-              brand: '未知品牌', // API中没有brand字段，使用默认值
-              stock: product.stock,
-              status: product.isActive ? 'active' : 'inactive',
-              image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
-              createdAt: new Date(product.createdAt).toLocaleDateString(),
-              sales: product.sold || 0,
-              rating: 4.5 // 默认评分，API中没有此字段
-            }))
-            setProducts(formattedProducts)
-          }
-        } else {
-          console.error('获取商品数据失败:', response.statusText)
-        }
-      } catch (error) {
-        console.error('获取商品数据出错:', error)
-      }
+  // 使用实时同步Hook获取商品数据
+  const { 
+    data: apiData, 
+    loading, 
+    error: syncError, 
+    refresh: refreshProducts,
+    addItem: addProduct,
+    updateItem: updateProduct,
+    removeItem: removeProduct
+  } = useRealTimeSync<any>({
+    endpoint: '/api/products',
+    pollInterval: 5000,
+    onUpdate: (data) => {
+      console.log('商品数据实时更新:', data.products?.length || 0, '个商品')
+    },
+    onError: (error) => {
+      console.error('商品数据同步失败:', error)
     }
+  })
 
-    fetchProducts()
-  }, [])
+  // 转换API数据格式为前端显示格式
+  const products = useMemo(() => {
+    if (!apiData?.products) return []
+    
+    return apiData.products.map((product: any) => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
+      category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
+      brand: '未知品牌', // API中没有brand字段，使用默认值
+      stock: product.stock,
+      status: product.isActive ? 'active' : 'inactive',
+      image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
+      createdAt: new Date(product.createdAt).toLocaleDateString(),
+      sales: product.sold || 0,
+      rating: 4.5 // 默认评分，API中没有此字段
+    }))
+  }, [apiData])
 
   // 获取所有分类
   const categories = Array.from(new Set(products.map(p => p.category)))
@@ -111,6 +112,33 @@ export default function ProductsPage() {
     } else {
       setSelectedProducts(paginatedProducts.map(product => product.id))
     }
+  }
+
+  // 处理商品添加成功后的实时更新
+  const handleProductAdded = (newProduct: any) => {
+    // 格式化新商品数据
+    const formattedProduct = {
+      id: newProduct.id,
+      name: newProduct.name,
+      description: newProduct.description,
+      price: parseFloat(newProduct.price),
+      originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
+      category: newProduct.categoryId,
+      brand: '未知品牌',
+      stock: newProduct.stock,
+      status: newProduct.isActive ? 'active' : 'inactive',
+      image: newProduct.images?.[0] || '📦',
+      createdAt: new Date(newProduct.createdAt).toLocaleDateString(),
+      sales: newProduct.sold || 0,
+      rating: 4.5
+    }
+    
+    // 使用实时同步Hook的addItem方法
+    addProduct(formattedProduct)
+    setShowAddModal(false)
+    
+    // 手动刷新数据确保同步
+    refreshProducts()
   }
 
   const handleAddSuccess = () => {
@@ -466,7 +494,13 @@ export default function ProductsPage() {
       </div>
 
       {/* Add product modal */}
-      {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={handleAddSuccess} />}
+      {showAddModal && (
+        <AddProductModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={handleProductAdded}
+        />
+      )}
     </div>
   )
 }

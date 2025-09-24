@@ -314,11 +314,11 @@ export default function ProductFAQPage() {
             <div>
               <h3 className="text-lg font-semibold mb-6">SHOP AND LEARN</h3>
               <ul className="space-y-3">
-                <li><Link href="/products/phones" className="text-sm text-gray-300 hover:text-white transition-colors">Smartphones</Link></li>
-                <li><Link href="/products/tablets" className="text-sm text-gray-300 hover:text-white transition-colors">Tablets</Link></li>
-                <li><Link href="/products/laptops" className="text-sm text-gray-300 hover:text-white transition-colors">Laptops</Link></li>
-                <li><Link href="/products/accessories" className="text-sm text-gray-300 hover:text-white transition-colors">Accessories</Link></li>
-                <li><Link href="/products/smart-home" className="text-sm text-gray-300 hover:text-white transition-colors">Smart Home</Link></li>
+                <li><Link href="/uk/store/phones" className="text-sm text-gray-300 hover:text-white transition-colors">Smartphones</Link></li>
+                <li><Link href="/uk/store/tablets" className="text-sm text-gray-300 hover:text-white transition-colors">Tablets</Link></li>
+                <li><Link href="/uk/store/laptops" className="text-sm text-gray-300 hover:text-white transition-colors">Laptops</Link></li>
+                <li><Link href="/uk/store/accessories" className="text-sm text-gray-300 hover:text-white transition-colors">Accessories</Link></li>
+                <li><Link href="/uk/store/smart-home" className="text-sm text-gray-300 hover:text-white transition-colors">Smart Home</Link></li>
               </ul>
             </div>
 
