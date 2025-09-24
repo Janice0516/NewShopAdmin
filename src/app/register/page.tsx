@@ -3,16 +3,27 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { validateEmail, validatePassword, validateConfirmPassword, validateName, createFieldValidation, updateFieldValidation } from '@/utils/validation'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    agreeToTerms: false
+  })
+  const [fieldValidations, setFieldValidations] = useState({
+    name: createFieldValidation(),
+    email: createFieldValidation(),
+    password: createFieldValidation(),
+    confirmPassword: createFieldValidation()
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,8 +31,25 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('两次输入的密码不一致')
+    // Validate all fields
+    const nameValidation = validateName(formData.name)
+    const emailValidation = validateEmail(formData.email)
+    const passwordValidation = validatePassword(formData.password)
+    const confirmPasswordValidation = validateConfirmPassword(formData.password, formData.confirmPassword)
+
+    if (!nameValidation.isValid || !emailValidation.isValid || !passwordValidation.isValid || !confirmPasswordValidation.isValid) {
+      setFieldValidations({
+        name: { value: formData.name, error: nameValidation.message || '', touched: true },
+        email: { value: formData.email, error: emailValidation.message || '', touched: true },
+        password: { value: formData.password, error: passwordValidation.message || '', touched: true },
+        confirmPassword: { value: formData.confirmPassword, error: confirmPasswordValidation.message || '', touched: true }
+      })
+      setLoading(false)
+      return
+    }
+
+    if (!formData.agreeToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy')
       setLoading(false)
       return
     }
@@ -42,54 +70,115 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push('/lottery') // 注册成功后跳转到抽奖页面
+        router.push('/lottery') // Redirect to lottery page after successful registration
       } else {
-        setError(data.error || '注册失败')
+        setError(data.error || 'Registration failed')
       }
     } catch (error) {
-      setError('网络错误，请稍后重试')
+      setError('Network error, please try again later')
     } finally {
       setLoading(false)
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    const { name, value, type, checked } = e.target
+    
+    if (type === 'checkbox') {
+      setFormData({
+        ...formData,
+        [name]: checked
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      })
+
+      // Real-time validation
+      if (name === 'name') {
+        setFieldValidations(prev => ({
+          ...prev,
+          name: updateFieldValidation(prev.name, value, validateName)
+        }))
+      } else if (name === 'email') {
+        setFieldValidations(prev => ({
+          ...prev,
+          email: updateFieldValidation(prev.email, value, validateEmail)
+        }))
+      } else if (name === 'password') {
+        setFieldValidations(prev => ({
+          ...prev,
+          password: updateFieldValidation(prev.password, value, validatePassword),
+          // Also validate confirm password
+          confirmPassword: prev.confirmPassword.touched 
+            ? updateFieldValidation(prev.confirmPassword, formData.confirmPassword, (val) => validateConfirmPassword(value, val))
+            : prev.confirmPassword
+        }))
+      } else if (name === 'confirmPassword') {
+        setFieldValidations(prev => ({
+          ...prev,
+          confirmPassword: updateFieldValidation(prev.confirmPassword, value, (val) => validateConfirmPassword(formData.password, val))
+        }))
+      }
+    }
+  }
+
+  const getFieldError = (fieldName: keyof typeof fieldValidations) => {
+    const field = fieldValidations[fieldName]
+    return field.touched && field.error ? field.error : ''
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
-            创建新账户
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            已有账户？{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              立即登录
-            </Link>
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      {/* Xiaomi-style top navigation */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">Mi</span>
+                </div>
+                <span className="text-xl font-semibold text-gray-900">Xiaomi Store</span>
+                </Link>
+              </div>
+              <div className="flex items-center space-x-6 text-sm text-gray-600">
+                <Link href="/support" className="hover:text-orange-500 transition-colors">Help Center</Link>
+                <Link href="/login" className="hover:text-orange-500 transition-colors">Sign In</Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
+      <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
+              <span className="text-white font-bold text-2xl">Mi</span>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Create Xiaomi Account
+              </h2>
+              <p className="text-gray-600">
+                Join Xiaomi to enjoy exclusive services and offers
+              </p>
+          </div>
+        </div>
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                姓名
-              </label>
-              <div className="mt-1">
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
                 <input
                   id="name"
                   name="name"
@@ -98,17 +187,20 @@ export default function RegisterPage() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="请输入您的姓名"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 ${
+                    getFieldError('name') ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Enter your full name"
                 />
+                {getFieldError('name') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+                )}
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                邮箱地址
-              </label>
-              <div className="mt-1">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
                 <input
                   id="email"
                   name="email"
@@ -117,107 +209,147 @@ export default function RegisterPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="请输入邮箱地址"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 ${
+                    getFieldError('email') ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Enter your email address"
                 />
+                {getFieldError('email') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
+                )}
               </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 ${
+                    getFieldError('password') ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Create a strong password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {getFieldError('password') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('password')}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                密码
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="请输入密码（至少6位）"
-                  minLength={6}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                确认密码
-              </label>
-              <div className="mt-1">
+              <div className="relative">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="请再次输入密码"
-                  minLength={6}
+                  className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 ${
+                    getFieldError('confirmPassword') ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {getFieldError('confirmPassword') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('confirmPassword')}</p>
+              )}
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="agreeToTerms"
+                  name="agreeToTerms"
+                  type="checkbox"
+                  required
+                  checked={formData.agreeToTerms}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
                 />
               </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
-                我同意{' '}
-                <Link href="/terms" className="text-blue-600 hover:text-blue-500">
-                  服务条款
-                </Link>
-                {' '}和{' '}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
-                  隐私政策
-                </Link>
-              </label>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? '注册中...' : '注册并参与抽奖'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">或者</span>
+              <div className="ml-3 text-sm">
+                <label htmlFor="agreeToTerms" className="text-gray-700">
+                  I agree to Xiaomi's{' '}
+                  <Link href="/terms" className="text-orange-500 hover:text-orange-600 transition-colors">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-orange-500 hover:text-orange-600 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </label>
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span>微信注册</span>
-              </button>
+            <button
+              type="submit"
+              disabled={loading || !formData.agreeToTerms}
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white transition-all duration-200 ${
+                loading || !formData.agreeToTerms
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform hover:scale-[1.02]'
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating account...
+                </div>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+            </form>
 
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span>QQ注册</span>
-              </button>
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-600">
+                Already have a Xiaomi account?{' '}
+                <Link href="/login" className="font-medium text-orange-500 hover:text-orange-600 transition-colors">
+                  Sign in now
+                </Link>
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom information */}
+          <div className="mt-8 text-center text-xs text-gray-500">
+            <p>By creating an account, you agree to Xiaomi's Terms of Service and Privacy Policy</p>
+            <div className="mt-2 text-gray-400">
+              <p>Your Xiaomi account works across all Xiaomi products and services</p>
             </div>
           </div>
         </div>

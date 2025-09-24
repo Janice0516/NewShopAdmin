@@ -679,7 +679,7 @@ export default function CouponsPage() {
                 </div>
                 <div>
                   <span className="text-gray-500">使用率：</span>
-                  <span className="text-gray-900">{((selectedCoupon.usedCount / selectedCoupon.usageLimit) * 100).toFixed(1)}%</span>
+                  <span className="text-gray-900">{selectedCoupon.usedCount && selectedCoupon.usageLimit ? ((selectedCoupon.usedCount / selectedCoupon.usageLimit) * 100).toFixed(1) : '0.0'}%</span>
                 </div>
                 <div>
                   <span className="text-gray-500">开始时间：</span>

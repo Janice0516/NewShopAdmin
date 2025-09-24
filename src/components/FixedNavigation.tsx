@@ -114,7 +114,7 @@ export default function FixedNavigation() {
                 <ShoppingBagIcon className="h-5 w-5" />
               </Link>
               <Link 
-                href="/login" 
+                href="/register" 
                 className="p-2 text-gray-700 hover:text-orange-500 hover:bg-gray-50 rounded-md transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <UserIcon className="h-5 w-5" />

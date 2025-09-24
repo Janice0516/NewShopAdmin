@@ -5,40 +5,99 @@ import {
   ChartBarIcon,
   CurrencyDollarIcon,
   ShoppingCartIcon,
-  UserGroupIcon,
+  UsersIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   CalendarIcon,
-  ArrowPathIcon,
-  EyeIcon,
-  GiftIcon
+  ArrowDownTrayIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
+import SalesChart from '@/components/admin/charts/SalesChart'
+import CategoryChart from '@/components/admin/charts/CategoryChart'
+import OrderStatusChart from '@/components/admin/charts/OrderStatusChart'
+import UserGrowthChart from '@/components/admin/charts/UserGrowthChart'
 
-interface SalesData {
-  date: string
-  sales: number
-  orders: number
-  users: number
-}
-
-interface ProductSales {
-  name: string
-  sales: number
-  quantity: number
-  revenue: number
-}
-
-interface CategoryData {
-  name: string
-  value: number
-  color: string
-}
-
-interface UserAnalytics {
-  date: string
-  newUsers: number
-  activeUsers: number
-  retention: number
+interface AnalyticsData {
+  overview: {
+    totalUsers: number
+    totalProducts: number
+    totalOrders: number
+    totalRevenue: number
+    activeUsers: number
+    newUsers: number
+    completedOrders: number
+    pendingOrders: number
+  }
+  sales: {
+    dailySales: Array<{
+      date: string
+      amount: number
+      orders: number
+    }>
+    categorySales: Array<{
+      category: string
+      amount: number
+      percentage: number
+    }>
+    monthlyTrend: Array<{
+      month: string
+      revenue: number
+      orders: number
+    }>
+  }
+  products: {
+    topSelling: Array<{
+      id: string
+      name: string
+      sales: number
+      revenue: number
+    }>
+    lowStock: Array<{
+      id: string
+      name: string
+      stock: number
+      price: number
+    }>
+    categoryStats: Array<{
+      category: string
+      count: number
+    }>
+  }
+  users: {
+    registrationTrend: Array<{
+      date: string
+      count: number
+    }>
+    topCustomers: Array<{
+      id: string
+      name: string
+      email: string
+      totalSpent: number
+      orderCount: number
+    }>
+    usersByRole: Array<{
+      role: string
+      count: number
+    }>
+  }
+  orders: {
+    statusDistribution: Array<{
+      status: string
+      count: number
+      percentage: number
+    }>
+    paymentMethods: Array<{
+      method: string
+      count: number
+      amount: number
+    }>
+    averageOrderValue: number
+    orderTrend: Array<{
+      date: string
+      count: number
+      amount: number
+    }>
+  }
 }
 
 export default function AnalyticsPage() {
@@ -58,10 +117,10 @@ export default function AnalyticsPage() {
     conversionGrowth: 0
   })
   
-  const [salesData, setSalesData] = useState<SalesData[]>([])
-  const [productSales, setProductSales] = useState<ProductSales[]>([])
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
-  const [userAnalytics, setUserAnalytics] = useState<UserAnalytics[]>([])
+  const [salesData, setSalesData] = useState<Array<{date: string, sales: number, orders: number, users: number}>>([])
+  const [productSales, setProductSales] = useState<Array<{name: string, sales: number, quantity: number, revenue: number}>>([])
+  const [categoryData, setCategoryData] = useState<Array<{name: string, value: number, color: string}>>([])
+  const [userAnalytics, setUserAnalytics] = useState<Array<{date: string, newUsers: number, activeUsers: number, retention: number}>>([])
 
   useEffect(() => {
     setIsClient(true)
@@ -75,7 +134,7 @@ export default function AnalyticsPage() {
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // 模拟销售数据
-    const mockSalesData: SalesData[] = [
+    const mockSalesData = [
       { date: '2024-01-01', sales: 12500, orders: 45, users: 38 },
       { date: '2024-01-02', sales: 15200, orders: 52, users: 42 },
       { date: '2024-01-03', sales: 18900, orders: 67, users: 55 },
@@ -86,7 +145,7 @@ export default function AnalyticsPage() {
     ]
     
     // 模拟商品销售数据
-    const mockProductSales: ProductSales[] = [
+    const mockProductSales = [
       { name: 'iPhone 15 Pro', sales: 156, quantity: 156, revenue: 234000 },
       { name: '小米13 Ultra', sales: 234, quantity: 234, revenue: 187200 },
       { name: 'MacBook Pro', sales: 89, quantity: 89, revenue: 178000 },
@@ -98,7 +157,7 @@ export default function AnalyticsPage() {
     ]
     
     // 模拟分类数据
-    const mockCategoryData: CategoryData[] = [
+    const mockCategoryData = [
       { name: '手机数码', value: 45, color: '#8884d8' },
       { name: '电脑办公', value: 25, color: '#82ca9d' },
       { name: '家用电器', value: 15, color: '#ffc658' },
@@ -107,7 +166,7 @@ export default function AnalyticsPage() {
     ]
     
     // 模拟用户分析数据
-    const mockUserAnalytics: UserAnalytics[] = [
+    const mockUserAnalytics = [
       { date: '2024-01-01', newUsers: 25, activeUsers: 156, retention: 78 },
       { date: '2024-01-02', newUsers: 32, activeUsers: 189, retention: 82 },
       { date: '2024-01-03', newUsers: 28, activeUsers: 203, retention: 85 },
@@ -253,7 +312,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
-              <UserGroupIcon className="h-6 w-6 text-purple-600" />
+              <UsersIcon className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -279,6 +338,95 @@ export default function AnalyticsPage() {
               <ChartBarIcon className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">销售趋势</h3>
+            <span className="text-sm text-gray-500">{getDateRangeText(dateRange)}</span>
+          </div>
+          {loading ? (
+            <div className="h-80 flex items-center justify-center">
+              <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+            </div>
+          ) : (
+            <SalesChart 
+              data={salesData.map(item => ({
+                date: item.date,
+                amount: item.sales,
+                orders: item.orders
+              }))} 
+            />
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">分类销售占比</h3>
+            <span className="text-sm text-gray-500">按销售额</span>
+          </div>
+          {loading ? (
+            <div className="h-80 flex items-center justify-center">
+              <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+            </div>
+          ) : (
+            <CategoryChart 
+              data={categoryData.map(item => ({
+                category: item.name,
+                amount: item.value * 1000, // 模拟金额
+                percentage: item.value
+              }))} 
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Additional Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">用户增长趋势</h3>
+            <span className="text-sm text-gray-500">新增用户 vs 总用户</span>
+          </div>
+          {loading ? (
+            <div className="h-80 flex items-center justify-center">
+              <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+            </div>
+          ) : (
+            <UserGrowthChart 
+              data={userAnalytics.map(item => ({
+                date: item.date,
+                newUsers: item.newUsers,
+                totalUsers: item.activeUsers
+              }))} 
+            />
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">订单状态分布</h3>
+            <span className="text-sm text-gray-500">按状态统计</span>
+          </div>
+          {loading ? (
+            <div className="h-80 flex items-center justify-center">
+              <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+            </div>
+          ) : (
+            <OrderStatusChart 
+              data={[
+                { status: 'PENDING', count: 45, percentage: 25 },
+                { status: 'CONFIRMED', count: 67, percentage: 37 },
+                { status: 'SHIPPED', count: 34, percentage: 19 },
+                { status: 'DELIVERED', count: 28, percentage: 15 },
+                { status: 'CANCELLED', count: 6, percentage: 3 },
+                { status: 'REFUNDED', count: 2, percentage: 1 }
+              ]} 
+            />
+          )}
         </div>
       </div>
 
@@ -434,7 +582,7 @@ export default function AnalyticsPage() {
           
           <div className="bg-white bg-opacity-20 rounded-lg p-4">
             <div className="flex items-center mb-2">
-              <UserGroupIcon className="h-5 w-5 mr-2" />
+              <UsersIcon className="h-5 w-5 mr-2" />
               <span className="font-medium">用户活跃</span>
             </div>
             <p className="text-sm text-blue-100">
@@ -444,7 +592,7 @@ export default function AnalyticsPage() {
           
           <div className="bg-white bg-opacity-20 rounded-lg p-4">
             <div className="flex items-center mb-2">
-              <GiftIcon className="h-5 w-5 mr-2" />
+              <ChartBarIcon className="h-5 w-5 mr-2" />
               <span className="font-medium">商品表现</span>
             </div>
             <p className="text-sm text-blue-100">

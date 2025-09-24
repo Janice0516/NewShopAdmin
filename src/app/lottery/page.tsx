@@ -291,7 +291,7 @@ export default function LotteryPage() {
                 <div className="text-3xl mb-2">{prize.image}</div>
                 <p className="text-white font-medium text-sm">{prize.name}</p>
                 <p className="text-white/70 text-xs mt-1">
-                  {(prize.probability * 100).toFixed(0)}% 概率
+                  {prize.probability ? (prize.probability * 100).toFixed(0) : '0'}% 概率
                 </p>
               </div>
             ))}

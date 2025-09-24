@@ -133,6 +133,12 @@ model Order {
   paymentId     String?
   shippingFee   Decimal     @default(0) @db.Decimal(10, 2)
   remark        String?
+  // 物流跟踪相关字段
+  trackingNumber String?    // 物流单号
+  shippingCompany String?   // 物流公司
+  shippedAt     DateTime?   // 发货时间
+  deliveredAt   DateTime?   // 送达时间
+  estimatedDelivery DateTime? // 预计送达时间
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -140,6 +146,7 @@ model Order {
   address    Address     @relation(fields: [addressId], references: [id])
   items      OrderItem[]
   coupons    OrderCoupon[]
+  trackingHistory TrackingHistory[]
 
   @@map("orders")
 }
@@ -296,6 +303,21 @@ model LotteryLog {
 
   @@unique([userId, activityId])
   @@map("lottery_logs")
+}
+
+// 物流跟踪历史模型
+model TrackingHistory {
+  id          String   @id @default(cuid())
+  orderId     String
+  status      String   // 物流状态
+  description String   // 状态描述
+  location    String?  // 当前位置
+  timestamp   DateTime // 状态更新时间
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("tracking_history")
 }
 
 // 系统配置模型

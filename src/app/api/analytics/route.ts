@@ -159,15 +159,24 @@ export async function GET(request: NextRequest) {
         return acc
       }, {})
 
+      // 计算总收入用于百分比计算
+      const totalCategoryRevenue = Object.values(categorySales).reduce((sum: number, data: any) => sum + data.revenue, 0)
+
       analyticsData.sales = {
         dailySales: salesByDay.map((item: any) => ({
           date: item.createdAt.toISOString().split('T')[0],
-          revenue: item._sum.totalAmount || 0,
+          amount: item._sum.totalAmount || 0,
           orders: item._count.id || 0
         })),
         categorySales: Object.entries(categorySales).map(([category, data]: [string, any]) => ({
           category,
-          ...data
+          amount: data.revenue,
+          percentage: totalCategoryRevenue > 0 ? (data.revenue / totalCategoryRevenue) * 100 : 0
+        })),
+        monthlyTrend: salesByDay.map((item: any) => ({
+          month: item.createdAt.toISOString().split('T')[0],
+          revenue: item._sum.totalAmount || 0,
+          orders: item._count.id || 0
         }))
       }
     }
@@ -242,16 +251,21 @@ export async function GET(request: NextRequest) {
 
       analyticsData.products = {
         topSelling: topSellingProducts.map((item: any) => ({
-          ...productMap[item.productId],
-          soldQuantity: item._sum.quantity || 0
+          id: productMap[item.productId]?.id,
+          name: productMap[item.productId]?.name,
+          sales: item._sum.quantity || 0,
+          revenue: (productMap[item.productId]?.price || 0) * (item._sum.quantity || 0)
         })),
         lowStock: lowStockProducts,
-        byCategory: await prisma.product.groupBy({
+        categoryStats: await prisma.product.groupBy({
           by: ['categoryId'],
           _count: {
             id: true
           }
-        })
+        }).then(categories => categories.map((cat: any) => ({
+          category: cat.categoryId || '未分类',
+          count: cat._count.id
+        })))
       }
     }
 
@@ -325,14 +339,25 @@ export async function GET(request: NextRequest) {
         })
       )
 
+      // 计算订单状态百分比
+      const totalOrders = ordersByStatus.reduce((sum: number, item: any) => sum + item._count.id, 0)
+
       analyticsData.users = {
-        byRole: usersByRole,
-        byStatus: usersByStatus,
+        usersByRole: usersByRole.map((item: any) => ({
+          role: item.role,
+          count: item._count.id
+        })),
         registrationTrend: userRegistrationTrend.map((item: any) => ({
           date: item.createdAt.toISOString().split('T')[0],
           count: item._count.id
         })),
-        topCustomers: customerSpending.sort((a: any, b: any) => b.totalSpent - a.totalSpent)
+        topCustomers: customerSpending.sort((a: any, b: any) => b.totalSpent - a.totalSpent).map((customer: any) => ({
+          id: customer.id,
+          name: customer.name,
+          email: customer.email,
+          totalSpent: customer.totalSpent,
+          orderCount: customer._count.orders
+        }))
       }
     }
 
@@ -385,15 +410,26 @@ export async function GET(request: NextRequest) {
         })
       ])
 
+      // 计算订单状态百分比
+      const totalOrdersForStatus = ordersByStatus.reduce((sum: number, item: any) => sum + item._count.id, 0)
+
       analyticsData.orders = {
-        byStatus: ordersByStatus,
-        trend: orderTrend.map((item: any) => ({
+        statusDistribution: ordersByStatus.map((item: any) => ({
+          status: item.status,
+          count: item._count.id,
+          percentage: totalOrdersForStatus > 0 ? (item._count.id / totalOrdersForStatus) * 100 : 0
+        })),
+        orderTrend: orderTrend.map((item: any) => ({
           date: item.createdAt.toISOString().split('T')[0],
           count: item._count.id,
-          revenue: item._sum.totalAmount || 0
+          amount: item._sum.totalAmount || 0
         })),
-        averageValue: averageOrderValue._avg.totalAmount || 0,
-        byPaymentMethod: ordersByPaymentMethod
+        averageOrderValue: averageOrderValue._avg.totalAmount || 0,
+        paymentMethods: ordersByPaymentMethod.map((item: any) => ({
+          method: item.paymentMethod,
+          count: item._count.id,
+          amount: item._sum.totalAmount || 0
+        }))
       }
     }
 

@@ -200,12 +200,12 @@ export default function Navbar() {
                 <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6"></path>
               </svg>
             </button>
-            <button className="user-btn" aria-label="用户中心">
+            <Link href="/register" className="user-btn" aria-label="用户中心">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
 
