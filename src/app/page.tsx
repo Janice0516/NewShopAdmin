@@ -1,27 +1,30 @@
 import Link from 'next/link'
-import FixedNavigation from '@/components/FixedNavigation'
+import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
 import DynamicSpacer from '@/components/DynamicSpacer'
+import '@/styles/navbar.css'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <FixedNavigation />
+      <Navbar />
 
-      {/* Top Promotional Banner */}
-      <ClosableBanner 
-        className="bg-orange-500 text-white text-center py-2 text-sm"
-        storageKey="promotional-banner"
-      >
-        <p>
-          <strong>Free shipping</strong> on orders over £50 | 
-          <strong> 30-day returns</strong> | 
-          <strong> Official warranty</strong>
-        </p>
-      </ClosableBanner>
+      {/* 为固定导航栏添加顶部间距 */}
+      <div className="pt-16">
+        {/* Top Promotional Banner */}
+        <ClosableBanner 
+          className="bg-orange-500 text-white text-center py-2 text-sm"
+          storageKey="promotional-banner"
+        >
+          <p>
+            <strong>Free shipping</strong> on orders over £50 | 
+            <strong> 30-day returns</strong> | 
+            <strong> Official warranty</strong>
+          </p>
+        </ClosableBanner>
 
-      {/* Dynamic Spacer */}
-      <DynamicSpacer />
+        {/* Dynamic Spacer */}
+        <DynamicSpacer />
 
       {/* Hero Section - Main Banner */}
       <section className="relative bg-gradient-to-r from-gray-900 to-gray-700 text-white overflow-hidden">
@@ -353,6 +356,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

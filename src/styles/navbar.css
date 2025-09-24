@@ -1,0 +1,877 @@
+/* 导航栏固定定位，确保始终可见 */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 64px;
+}
+
+/* 左侧 Logo 区域 */
+.nav-left {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ff6900;
+  letter-spacing: -0.025em;
+}
+
+/* 中间导航菜单区域 */
+.nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.nav-menu.desktop {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #ff6900;
+  background-color: #fef3e2;
+}
+
+/* 右侧功能区域 */
+.nav-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.search-btn,
+.cart-btn,
+.user-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.search-btn:hover,
+.cart-btn:hover,
+.user-btn:hover {
+  color: #ff6900;
+  background-color: #f9fafb;
+}
+
+/* 下拉菜单基础样式 */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+  z-index: 50;
+  min-width: 200px;
+  padding: 0.5rem 0;
+  pointer-events: none;
+}
+
+.dropdown:hover .dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Store、Wearables 下拉菜单特殊样式 */
+.store-dropdown-content,
+.wearables-dropdown-content {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: 100vw;
+  height: 80vh;
+  min-height: 500px;
+  max-height: 800px;
+  position: fixed;
+  left: 0;
+  top: 64px;
+  padding: 2rem 3rem;
+  gap: 2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 16px rgba(0, 0, 0, 0.04);
+  transform: none;
+  left: 0 !important;
+  top: 64px !important;
+  min-width: auto;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+  pointer-events: none;
+}
+
+/* Smart Home Mega Menu 特殊样式 */
+.smart-home-dropdown-content.mega-menu {
+  display: flex;
+  width: 100vw;
+  height: 450px;
+  max-height: 450px;
+  position: fixed;
+  left: 0;
+  top: 64px;
+  padding: 0;
+  gap: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 16px rgba(0, 0, 0, 0.04);
+  transform: none;
+  left: 0 !important;
+  top: 64px !important;
+  min-width: auto;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+  pointer-events: none;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* Lifestyle Mega Menu 样式 */
+.lifestyle-dropdown-content.mega-menu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 80vh;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+  pointer-events: none;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* 确保Lifestyle Mega Menu在导航栏下方正确显示 */
+.lifestyle-dropdown-content.mega-menu.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Lifestyle Mega Menu 内容滚动容器 */
+.lifestyle-dropdown-content.mega-menu .mega-menu-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Smart Home Mega Menu 内容滚动容器 */
+.smart-home-dropdown-content.mega-menu .mega-menu-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Store、Wearables菜单悬停时的特殊处理 */
+.dropdown:hover .store-dropdown-content,
+.dropdown.show .store-dropdown-content,
+.dropdown:hover .wearables-dropdown-content,
+.dropdown.show .wearables-dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+/* Smart Home菜单悬停时的特殊处理 */
+.dropdown:hover .smart-home-dropdown-content,
+.dropdown.show .smart-home-dropdown-content,
+.dropdown:hover .lifestyle-dropdown-content,
+.dropdown.show .lifestyle-dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.dropdown-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dropdown-column.left-column {
+  grid-column: span 2;
+}
+
+.dropdown-column.center-column {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-column.right-column {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.column-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.column-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.column-items li {
+  margin: 0 0 0.5rem 0;
+}
+
+.column-items .dropdown-link {
+  display: block;
+  padding: 0.5rem 0;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  border-radius: 4px;
+}
+
+.column-items .dropdown-link:hover {
+  color: #ff6900;
+  background-color: rgba(255, 105, 0, 0.05);
+  padding-left: 0.5rem;
+}
+
+.center-column .column-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  height: 100%;
+}
+
+.center-column .column-items li {
+  margin: 0;
+}
+
+.center-column .column-title {
+  font-size: 1.125rem;
+  margin: 0 0 1.5rem 0;
+  padding: 0;
+  grid-column: 1 / -1;
+}
+
+.center-column .dropdown-link {
+  font-size: 0.8rem;
+  padding: 0.375rem 0.5rem;
+  height: fit-content;
+}
+
+/* 产品网格 - 适配新的栅格布局 */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  height: 100%;
+}
+
+.product-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+
+.product-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1rem;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #f3f4f6;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 105, 0, 0.03), rgba(255, 133, 51, 0.03));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-link:hover {
+  background-color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(255, 105, 0, 0.08);
+  border-color: #ff6900;
+}
+
+.product-link:hover::before {
+  opacity: 1;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.2;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.product-link:hover .product-name {
+  color: #ff6900;
+}
+
+/* Smart Home Mega Menu 左侧65%分类导航区域 */
+.mega-menu-left {
+  flex: 0 0 65%;
+  padding: 2rem 3rem 2rem 3rem;
+  padding-right: 2rem;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  max-height: 80vh;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+  scroll-behavior: smooth;
+}
+
+/* 自定义滚动条样式 */
+.mega-menu-left::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mega-menu-left::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.mega-menu-left::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.mega-menu-left::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem 2rem;
+  margin-top: 1rem;
+}
+
+.category-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ff6900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.category-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-items li {
+  margin-bottom: 0.5rem;
+}
+
+.category-items .dropdown-link {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #4b5563;
+  text-decoration: none;
+  padding: 0.375rem 0;
+  transition: color 0.2s ease;
+}
+
+.category-items .dropdown-link:hover {
+  color: #ff6900;
+}
+
+.new-badge {
+  background: #ff6900;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+}
+
+/* Smart Home Mega Menu 右侧35%新品展示区域 */
+.mega-menu-right {
+  flex: 0 0 35%;
+  padding: 2rem 3rem 2rem 2rem;
+  overflow-y: auto;
+  max-height: 80vh;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+  scroll-behavior: smooth;
+}
+
+/* 右侧区域自定义滚动条样式 */
+.mega-menu-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mega-menu-right::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.mega-menu-right::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.mega-menu-right::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.new-products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mega-menu-right .product-item {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  border: 1px solid #f3f4f6;
+}
+
+.mega-menu-right .product-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #ff6900;
+}
+
+.mega-menu-right .product-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.mega-menu-right .product-image {
+  width: 100%;
+  height: 80px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border-radius: 0.375rem;
+}
+
+.mega-menu-right .product-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.mega-menu-right .product-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* 简单下拉菜单样式 */
+.simple-dropdown {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.simple-dropdown li {
+  margin: 0;
+}
+
+.simple-dropdown .dropdown-link {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 400;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0;
+}
+
+.simple-dropdown .dropdown-link:hover {
+  color: #ff6900;
+  background-color: #fef3e2;
+}
+
+/* 移动端样式 */
+.mobile-toggle {
+  display: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-toggle:hover {
+  background-color: #f9fafb;
+}
+
+.nav-menu.mobile {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  background: white;
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+.nav-menu.mobile .nav-item {
+  display: block;
+}
+
+.nav-menu.mobile .nav-item a {
+  display: block;
+  padding: 0.875rem 2rem;
+  color: #374151;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.nav-menu.mobile .nav-item a:hover {
+  color: #ff6900;
+  background-color: #fef3e2;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .store-dropdown-content {
+    min-width: clamp(700px, 90vw, 900px);
+    max-width: clamp(800px, 95vw, 1000px);
+    padding: clamp(1.5rem, 2.5vw, 2.5rem);
+    gap: clamp(1.5rem, 2vw, 2.5rem);
+  }
+  
+  .dropdown-column.left-column {
+    flex: 0 0 clamp(140px, 18%, 160px);
+  }
+  
+  .dropdown-column.center-column {
+    max-width: clamp(250px, 40%, 320px);
+    margin: 0 clamp(0.75rem, 1.5vw, 1.5rem);
+  }
+  
+  .dropdown-column.right-column {
+    flex: 0 0 clamp(240px, 35%, 300px);
+  }
+  
+  .product-image {
+    width: clamp(80px, 8vw, 90px);
+    height: clamp(80px, 8vw, 90px);
+  }
+  
+  .column-title {
+    font-size: clamp(0.875rem, 1.5vw, 0.95rem);
+  }
+  
+  .column-items .dropdown-link {
+    font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 1.2vw, 1rem);
+  }
+  
+  .product-name {
+    font-size: clamp(0.75rem, 1.1vw, 0.825rem);
+  }
+}
+
+@media (max-width: 992px) {
+  .store-dropdown-content {
+    flex-direction: column;
+    min-width: clamp(500px, 85vw, 700px);
+    max-width: clamp(600px, 90vw, 800px);
+    padding: clamp(1.25rem, 2vw, 2rem);
+    gap: clamp(1.25rem, 1.8vw, 2rem);
+  }
+  
+  .dropdown-column {
+    flex: none;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .dropdown-column.left-column,
+  .dropdown-column.center-column,
+  .dropdown-column.right-column {
+    flex: none;
+    width: 100%;
+  }
+  
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: clamp(1rem, 2vw, 1.25rem);
+  }
+  
+  .product-image {
+    width: clamp(70px, 10vw, 85px);
+    height: clamp(70px, 10vw, 85px);
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0 1rem;
+  }
+  
+  .nav-center,
+  .nav-right {
+    display: none;
+  }
+  
+  .mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-menu.mobile {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .store-dropdown-content {
+    position: static;
+    box-shadow: none;
+    border-radius: 0;
+    background: white;
+    min-width: auto;
+    max-width: none;
+    width: 100%;
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .column-title {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  
+  .column-items .dropdown-link {
+    font-size: 0.875rem;
+    padding: 0.625rem 0.75rem;
+  }
+  
+  .product-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .product-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .product-name {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .store-dropdown-content {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+  
+  .column-title {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .column-items .dropdown-link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.625rem;
+  }
+  
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .product-link {
+    padding: 0.75rem;
+  }
+  
+  .product-image {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .product-name {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-menu.desktop {
+    display: none;
+  }
+  .mobile-toggle {
+    display: block;
+  }
+  .nav-menu.mobile {
+    display: flex;
+  }
+}
