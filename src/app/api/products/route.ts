@@ -109,7 +109,8 @@ export async function POST(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    console.log('用户信息:', user)
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }
@@ -121,22 +122,13 @@ export async function POST(request: NextRequest) {
       name,
       description,
       price,
-      originalPrice,
-      sku,
-      category,
-      brand,
-      images,
-      specifications,
       stock,
-      minStock,
-      weight,
-      dimensions,
-      tags,
-      status = 'draft'
+      categoryId,
+      images
     } = body
 
     // 验证必填字段
-    if (!name || !price || !sku || !category) {
+    if (!name || !price || !categoryId) {
       return NextResponse.json(
         { success: false, error: '缺少必填字段' },
         { status: 400 }
@@ -161,21 +153,10 @@ export async function POST(request: NextRequest) {
         name,
         description,
         price: parseFloat(price),
-        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
-        // sku, // 注意：Product模型中没有sku字段
-        categoryId: category, // 使用categoryId而不是category
-        // brand, // 注意：Product模型中没有brand字段
+        categoryId,
         images: images || [],
-        // specifications: specifications || {}, // 使用specs而不是specifications
-        specs: specifications || {},
         stock: parseInt(stock) || 0,
-        // minStock: parseInt(minStock) || 0, // 注意：Product模型中没有minStock字段
-        // weight: weight ? parseFloat(weight) : null, // 注意：Product模型中没有weight字段
-        // dimensions: dimensions || {}, // 注意：Product模型中没有dimensions字段
-        // tags: tags || [], // 注意：Product模型中没有tags字段
-        // status, // 注意：Product模型中没有status字段，使用isActive
-        isActive: status === 'active',
-        // createdBy: user.userId // 注意：Product模型中没有createdBy字段
+        isActive: true
       }
     })
 

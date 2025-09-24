@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import AddProductModal from '@/components/AddProductModal'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -167,6 +168,11 @@ export default function ProductsPage() {
     } else {
       setSelectedProducts(paginatedProducts.map(product => product.id))
     }
+  }
+
+  const handleAddSuccess = () => {
+    // 重新加载商品数据
+    window.location.reload()
   }
 
   const handleDeleteProduct = (productId: string) => {
@@ -483,21 +489,8 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* Add product modal placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">添加商品</h3>
-            <p className="text-gray-600 mb-4">添加商品功能正在开发中...</p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              关闭
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Add product modal */}
+      {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={handleAddSuccess} />}
     </div>
   )
 }
