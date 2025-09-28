@@ -5,12 +5,21 @@ export async function POST() {
     message: '登出成功'
   })
 
-  // 清除cookie
+  // 清除cookie（同时清除通用 token 与管理员 token）
   response.cookies.set('token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 0
+    maxAge: 0,
+    path: '/'
+  })
+
+  response.cookies.set('admin_token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/'
   })
 
   return response

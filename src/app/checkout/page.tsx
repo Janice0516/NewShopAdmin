@@ -130,12 +130,55 @@ export default function CheckoutPage() {
 
     setLoading(true)
     
-    // 模拟提交订单
-    setTimeout(() => {
-      alert('订单提交成功！')
+    try {
+      const selectedAddr = addresses.find(addr => addr.id === selectedAddress)
+      if (!selectedAddr) {
+        alert('收货地址不存在')
+        return
+      }
+
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.id,
+          quantity: item.quantity
+        })),
+        shippingAddress: {
+          name: selectedAddr.name,
+          phone: selectedAddr.phone,
+          province: selectedAddr.province,
+          city: selectedAddr.city,
+          district: selectedAddr.district,
+          detail: selectedAddr.detail
+        },
+        addressId: selectedAddr.id,
+        paymentMethod,
+        notes: remark
+      }
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert('订单提交成功！')
+        // 实际应用中应该跳转到订单详情页或支付页面
+        // window.location.href = `/orders/${result.data.id}`
+      } else {
+        alert(`订单提交失败：${result.error}`)
+      }
+    } catch (error) {
+      console.error('提交订单失败:', error)
+      alert('网络错误，请稍后重试')
+    } finally {
       setLoading(false)
-      // 实际应用中应该跳转到订单详情页或支付页面
-    }, 2000)
+    }
   }
 
   return (

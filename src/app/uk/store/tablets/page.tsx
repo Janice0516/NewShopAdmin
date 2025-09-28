@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
@@ -125,10 +125,52 @@ export default function TabletsPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 800))
-      setProducts(tablets)
-      setLoading(false)
+      try {
+        setLoading(true)
+        // 获取分类，优先匹配“Tablets”或“Electronics”，否则回退到全部商品
+        const catRes = await fetch('/api/categories', { cache: 'no-store' })
+        const cats = await catRes.json()
+        const target = Array.isArray(cats)
+          ? cats.find((c: any) => {
+              const n = (c.name || '').toLowerCase()
+              return n === 'tablets' || n === 'electronics'
+            })
+          : null
+        const url = target
+          ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}`
+          : '/api/products?limit=100'
+
+        const res = await fetch(url, { cache: 'no-store' })
+        const json = await res.json()
+        const apiProducts = (json?.data?.products || []).map((p: any) => {
+          const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            originalPrice: undefined,
+            image: firstImage,
+            rating: 4.5,
+            reviews: p._count?.orderItems || 0,
+            isNew: false,
+            hasOffer: false,
+            offerText: undefined,
+            badge: undefined,
+            specs: {
+              display: '',
+              processor: '',
+              storage: '',
+              battery: ''
+            }
+          } as Product
+        })
+        setProducts(apiProducts)
+      } catch (e) {
+        console.error('Failed to load tablets:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchProducts()
@@ -159,7 +201,11 @@ export default function TabletsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ClosableBanner />
+      <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
+          💡 平板频道提示：库存与价格以后台为准
+        </div>
+      </ClosableBanner>
       <Navbar />
       <DynamicSpacer />
       

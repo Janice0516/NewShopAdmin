@@ -15,7 +15,8 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  ViewColumnsIcon
 } from '@heroicons/react/24/outline'
 
 interface MenuItem {
@@ -28,6 +29,9 @@ const menuItems: MenuItem[] = [
   { name: '仪表盘', href: '/admin/dashboard', icon: HomeIcon },
   { name: '用户管理', href: '/admin/users', icon: UsersIcon },
   { name: '商品管理', href: '/admin/products', icon: ShoppingBagIcon },
+  // 新增：分类管理
+  { name: '分类管理', href: '/admin/categories', icon: ViewColumnsIcon },
+  { name: '首页栏目管理', href: '/admin/home-sections', icon: ViewColumnsIcon },
   { name: '订单管理', href: '/admin/orders', icon: ClipboardDocumentListIcon },
   { name: '优惠券管理', href: '/admin/coupons', icon: TicketIcon },
   { name: '抽奖活动', href: '/admin/lottery', icon: GiftIcon },
@@ -55,12 +59,12 @@ function AdminLayoutContent({
   const pathname = usePathname()
   const router = useRouter()
 
-  // 如果是登录页面，直接返回子组件，不使用管理后台布局
-  if (pathname === '/admin/login') {
-    return <>{children}</>
-  }
-
   useEffect(() => {
+    // 如果是登录页面，不需要进行权限验证
+    if (pathname === '/admin/login') {
+      setIsLoading(false)
+      return
+    }
     // 检查管理员权限
     const checkAuth = async () => {
       try {
@@ -111,13 +115,31 @@ function AdminLayoutContent({
     checkAuth()
   }, [pathname, router])
 
-  const handleLogout = () => {
-    // 实际应用中应该调用登出API
-    router.push('/login')
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } catch (e) {
+      console.error('登出失败', e)
+    } finally {
+      router.push('/login')
+    }
   }
 
   // 在客户端渲染完成前显示加载状态
-  if (isLoading || !user) {
+  if (isLoading) {
+    return <LoadingLayout />
+  }
+
+  // 如果是登录页面，直接返回子组件，不使用管理后台布局
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
+  // 如果用户未登录，显示加载状态（会被重定向到登录页面）
+  if (!user) {
     return <LoadingLayout />
   }
 

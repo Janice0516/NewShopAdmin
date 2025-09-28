@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
@@ -139,10 +139,49 @@ export default function SmartphonesPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 800))
-      setProducts(smartphones)
-      setLoading(false)
+      try {
+        setLoading(true)
+        // 先获取分类列表，找到智能手机分类ID（若不存在则回退到全部）
+        const catRes = await fetch('/api/categories', { cache: 'no-store' })
+        const cats = await catRes.json()
+        const target = Array.isArray(cats)
+          ? cats.find((c: any) => (c.name || '').toLowerCase() === 'smartphones')
+          : null
+        const url = target
+          ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}`
+          : '/api/products?limit=100'
+
+        const res = await fetch(url, { cache: 'no-store' })
+        const json = await res.json()
+        const apiProducts = (json?.data?.products || []).map((p: any) => {
+          const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            originalPrice: undefined,
+            image: firstImage,
+            rating: 4.5,
+            reviews: p._count?.orderItems || 0,
+            isNew: false,
+            hasOffer: false,
+            offerText: undefined,
+            badge: undefined,
+            specs: {
+              display: '',
+              camera: '',
+              battery: '',
+              storage: ''
+            }
+          } as Product
+        })
+        setProducts(apiProducts)
+      } catch (e) {
+        console.error('Failed to load smartphones:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchProducts()
@@ -173,7 +212,11 @@ export default function SmartphonesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <ClosableBanner />
+      <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
+          📢 提示：智能手机页价格与库存以后台数据为准
+        </div>
+      </ClosableBanner>
       <Navbar />
       <DynamicSpacer />
       

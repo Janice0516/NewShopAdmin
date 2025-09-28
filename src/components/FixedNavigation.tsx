@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { ShoppingBagIcon, Bars3Icon, MagnifyingGlassIcon, UserIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
 import ClosableBanner from './ClosableBanner'
+import Image from 'next/image'
 
 export default function FixedNavigation() {
   const pathname = usePathname()
@@ -74,10 +75,15 @@ export default function FixedNavigation() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <div className="w-8 h-8 bg-orange-500 rounded-sm flex items-center justify-center mr-3">
-                  <span className="text-white font-bold text-sm">Mi</span>
-                </div>
+              <Link href="/" className="flex items-center" aria-label="Xiaomi 首页">
+                <Image
+                  src="/Xiaomi_logo_(2021-).svg.png"
+                  alt="Xiaomi Logo"
+                  width={32}
+                  height={32}
+                  className="rounded-sm mr-3"
+                  priority
+                />
                 <span className="text-xl font-semibold text-gray-900 hidden sm:block">Xiaomi UK</span>
               </Link>
             </div>

@@ -31,34 +31,24 @@ export const menuData = [
         title: "Daily Picks >",
         items: [
           { 
-            title: "REDMI A5", 
-            href: "/uk/store/redmi-a5",
-            image: "/images/redmi-a5.jpg"
+            title: "Xiaomi Polarized Fitover Sunglasses", 
+            href: "/uk/store/xiaomi-polarized-fitover-sunglasses",
+            image: "/XiaomiPolarizedFitoverSunglasses.webp"
           },
           { 
-            title: "Xiaomi Watch S4", 
-            href: "/uk/store/xiaomi-watch-s4",
-            image: "/images/xiaomi-watch-s4.jpg"
+            title: "Xiaomi Water Ionic Hair Dryer H500", 
+            href: "/uk/store/xiaomi-water-ionic-hair-dryer-h500",
+            image: "/XiaomiWaterIonicHairDryerH500.webp"
           },
           { 
-            title: "REDMI Note 14 Pro+ 5G", 
-            href: "/uk/store/redmi-note-14-pro-plus",
-            image: "/images/redmi-note-14-pro-plus.jpg"
+            title: "Xiaomi Straw Mug", 
+            href: "/uk/store/xiaomi-straw-mug",
+            image: "/XiaomiStrawMug.webp"
           },
           { 
-            title: "REDMI Note 14 Pro 5G", 
-            href: "/uk/store/redmi-note-14-pro",
-            image: "/images/redmi-note-14-pro.jpg"
-          },
-          { 
-            title: "Xiaomi 15", 
-            href: "/uk/store/xiaomi-15",
-            image: "/images/xiaomi-15.jpg"
-          },
-          { 
-            title: "Mi Band 9", 
-            href: "/uk/store/mi-band-9",
-            image: "/images/mi-band-9.jpg"
+            title: "Xiaomi Smart Pet Food Feeder 2", 
+            href: "/uk/store/xiaomi-smart-pet-food-feeder-2",
+            image: "/XiaomiSmartPetFoodFeeder2 .webp"
           },
         ]
       }
@@ -92,32 +82,32 @@ export const menuData = [
           { 
             title: "Xiaomi Watch S4", 
             href: "/uk/store/xiaomi-watch-s4",
-            image: "/images/xiaomi-watch-s4.jpg"
+            image: "/XiaoMiWatchS4.webp"
           },
           { 
             title: "REDMI Watch 5", 
             href: "/uk/store/redmi-watch-5",
-            image: "/images/redmi-watch-5.jpg"
+            image: "/RedMiWatch5.webp"
           },
           { 
             title: "REDMI Watch 5 Lite", 
             href: "/uk/store/redmi-watch-5-lite",
-            image: "/images/redmi-watch-5-lite.jpg"
+            image: "/RedMiWatch5Lite.webp"
           },
           { 
             title: "REDMI Watch 5 Active", 
             href: "/uk/store/redmi-watch-5-active",
-            image: "/images/redmi-watch-5-active.jpg"
+            image: "/RedMiWatch5Active.webp"
           },
           { 
             title: "Xiaomi Watch 2", 
             href: "/uk/store/xiaomi-watch-2",
-            image: "/images/xiaomi-watch-2.jpg"
+            image: "/XiaoMiWatch2.webp"
           },
           { 
             title: "Mi Band 9", 
             href: "/uk/store/mi-band-9",
-            image: "/images/mi-band-9.jpg"
+            image: "/XiaoMiSmartBand9.webp"
           },
         ]
       }
@@ -199,72 +189,27 @@ export const menuData = [
       },
       // 右侧35%新品展示区域
       rightColumn: {
-        title: "Online 13 new products >",
+        title: "Featured Smart Home >",
         items: [
+          { 
+            title: "Xiaomi Outdoor Camera CW100 Dual", 
+            href: "/uk/store/xiaomi-outdoor-camera-cw100-dual",
+            image: "/XiaoMiOutdoorSmartCameraCW100Dual.webp"
+          },
           { 
             title: "Xiaomi Robot Vacuum H40", 
             href: "/uk/store/xiaomi-robot-vacuum-h40",
-            image: "/images/xiaomi-robot-vacuum-h40.jpg"
+            image: "/XiaoMiRobotVacuumH40.png"
           },
           { 
             title: "Xiaomi Robot Vacuum S40C", 
             href: "/uk/store/xiaomi-robot-vacuum-s40c",
-            image: "/images/xiaomi-robot-vacuum-s40c.jpg"
+            image: "/MiRobotVacuumS40C.webp"
           },
           { 
-            title: "Xiaomi TV Box S (3rd Gen)", 
-            href: "/uk/store/xiaomi-tv-box-s-3rd-gen",
-            image: "/images/xiaomi-tv-box-s-3rd-gen.jpg"
-          },
-          { 
-            title: "Xiaomi Outdoor Camera CW100 Dual", 
-            href: "/uk/store/xiaomi-outdoor-camera-cw100-dual",
-            image: "/images/xiaomi-outdoor-camera-cw100-dual.jpg"
-          },
-          { 
-            title: "Xiaomi Smart Air Purifier 4", 
-            href: "/uk/store/xiaomi-smart-air-purifier-4",
-            image: "/images/xiaomi-smart-air-purifier-4.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Smart Kettle Pro", 
-            href: "/uk/store/xiaomi-mi-smart-kettle-pro",
-            image: "/images/xiaomi-mi-smart-kettle-pro.jpg"
-          },
-          { 
-            title: "Xiaomi Smart Doorbell 3", 
-            href: "/uk/store/xiaomi-smart-doorbell-3",
-            image: "/images/xiaomi-smart-doorbell-3.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Rice Cooker 4L", 
-            href: "/uk/store/xiaomi-mi-rice-cooker-4l",
-            image: "/images/xiaomi-mi-rice-cooker-4l.jpg"
-          },
-          { 
-            title: "Xiaomi Smart LED Bulb E27", 
-            href: "/uk/store/xiaomi-smart-led-bulb-e27",
-            image: "/images/xiaomi-smart-led-bulb-e27.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Air Fryer 3.5L", 
-            href: "/uk/store/xiaomi-mi-air-fryer-3-5l",
-            image: "/images/xiaomi-mi-air-fryer-3-5l.jpg"
-          },
-          { 
-            title: "Xiaomi Smart Projector 2 Pro", 
-            href: "/uk/store/xiaomi-smart-projector-2-pro",
-            image: "/images/xiaomi-smart-projector-2-pro.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Smart Fan 2", 
-            href: "/uk/store/xiaomi-mi-smart-fan-2",
-            image: "/images/xiaomi-mi-smart-fan-2.jpg"
-          },
-          { 
-            title: "Xiaomi Smart Temperature Sensor", 
-            href: "/uk/store/xiaomi-smart-temperature-sensor",
-            image: "/images/xiaomi-smart-temperature-sensor.jpg"
+            title: "Xiaomi Smart Camera C701", 
+            href: "/uk/store/xiaomi-smart-camera-c701",
+            image: "/XiaomiSmartCameraC701.webp"
           },
         ]
       }
@@ -342,72 +287,27 @@ export const menuData = [
         ]
       },
       rightColumn: {
-        title: "Online 13 new products >",
+        title: "Featured Lifestyle >",
         items: [
-          { 
-            title: "Xiaomi 3A USB-A to USB-C Cable (1m)", 
-            href: "/uk/store/xiaomi-3a-usb-a-to-usb-c-cable-1m",
-            image: "/images/xiaomi-3a-usb-a-to-usb-c-cable-1m.jpg"
-          },
           { 
             title: "Xiaomi 6A Braided USB-C to USB-C Cable (2m)", 
             href: "/uk/store/xiaomi-6a-braided-usb-c-to-usb-c-cable-2m",
-            image: "/images/xiaomi-6a-braided-usb-c-to-usb-c-cable-2m.jpg"
+            image: "/XiaoMi6ACtoCCable2M.webp"
           },
           { 
             title: "Xiaomi 3A Braided USB-C to USB-C Cable (1m)", 
             href: "/uk/store/xiaomi-3a-braided-usb-c-to-usb-c-cable-1m",
-            image: "/images/xiaomi-3a-braided-usb-c-to-usb-c-cable-1m.jpg"
+            image: "/XiaoMi3ACtoCCable1M.webp"
+          },
+          { 
+            title: "Xiaomi 3A Braided USB-A to USB-C Cable (1m)", 
+            href: "/uk/store/xiaomi-3a-braided-usb-a-to-usb-c-cable-1m",
+            image: "/XiaoMi3AAtoCCable1M.webp"
           },
           { 
             title: "Xiaomi Electric Scooter 5 Plus", 
             href: "/uk/store/xiaomi-electric-scooter-5-plus",
-            image: "/images/xiaomi-electric-scooter-5-plus.jpg"
-          },
-          { 
-            title: "Xiaomi Wireless Charging Pad 20W", 
-            href: "/uk/store/xiaomi-wireless-charging-pad-20w",
-            image: "/images/xiaomi-wireless-charging-pad-20w.jpg"
-          },
-          { 
-            title: "Xiaomi Power Bank 3 20000mAh", 
-            href: "/uk/store/xiaomi-power-bank-3-20000mah",
-            image: "/images/xiaomi-power-bank-3-20000mah.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Electric Shaver S500", 
-            href: "/uk/store/xiaomi-mi-electric-shaver-s500",
-            image: "/images/xiaomi-mi-electric-shaver-s500.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Hair Clipper", 
-            href: "/uk/store/xiaomi-mi-hair-clipper",
-            image: "/images/xiaomi-mi-hair-clipper.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Selfie Stick Tripod", 
-            href: "/uk/store/xiaomi-mi-selfie-stick-tripod",
-            image: "/images/xiaomi-mi-selfie-stick-tripod.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Cordless Drill", 
-            href: "/uk/store/xiaomi-mi-cordless-drill",
-            image: "/images/xiaomi-mi-cordless-drill.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Flashlight", 
-            href: "/uk/store/xiaomi-mi-flashlight",
-            image: "/images/xiaomi-mi-flashlight.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Laser Distance Meter", 
-            href: "/uk/store/xiaomi-mi-laser-distance-meter",
-            image: "/images/xiaomi-mi-laser-distance-meter.jpg"
-          },
-          { 
-            title: "Xiaomi Mi Travel Backpack", 
-            href: "/uk/store/xiaomi-mi-travel-backpack",
-            image: "/images/xiaomi-mi-travel-backpack.jpg"
+            image: "/XiaoMiElectricScooter5Plus.webp"
           },
         ]
       }

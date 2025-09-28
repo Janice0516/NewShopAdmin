@@ -187,13 +187,35 @@ export default function UKStorePage() {
   ]
 
   useEffect(() => {
-    // 模拟API调用
     const fetchProducts = async () => {
-      setLoading(true)
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setProducts(mockProducts)
-      setLoading(false)
+      try {
+        setLoading(true)
+        const res = await fetch('/api/products?limit=100', { cache: 'no-store' })
+        const json = await res.json()
+        const apiProducts = (json?.data?.products || []).map((p: any) => {
+          const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            originalPrice: undefined,
+            image: firstImage,
+            category: p.category?.id || 'all',
+            rating: 4.5,
+            reviews: p._count?.orderItems || 0,
+            isNew: false,
+            hasOffer: false,
+            offerText: undefined,
+            badge: undefined,
+          } as Product
+        })
+        setProducts(apiProducts)
+      } catch (e) {
+        console.error('Failed to load products for store:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchProducts()
@@ -207,7 +229,11 @@ export default function UKStorePage() {
     <div className="min-h-screen bg-white">
       <Navbar />
       <DynamicSpacer />
-      <ClosableBanner />
+      <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
+          🎉 特惠提示：部分商品支持优惠与赠品活动，详情以商品页为准
+        </div>
+      </ClosableBanner>
       {/* Promotional Banner */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

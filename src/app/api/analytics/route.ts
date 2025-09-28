@@ -339,9 +339,6 @@ export async function GET(request: NextRequest) {
         })
       )
 
-      // 计算订单状态百分比
-      const totalOrders = ordersByStatus.reduce((sum: number, item: any) => sum + item._count.id, 0)
-
       analyticsData.users = {
         usersByRole: usersByRole.map((item: any) => ({
           role: item.role,

@@ -11,8 +11,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env.DATABASE_URL
     }
   },
-  // 优化数据库连接池配置
-  connectionLimit: 20, // 增加连接池大小
+  // 优化事务配置
   transactionOptions: {
     maxWait: 5000, // 最大等待时间5秒
     timeout: 10000, // 事务超时时间10秒

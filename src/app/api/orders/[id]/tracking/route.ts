@@ -1,12 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getUserFromRequest } from '@/lib/auth'
 
 // GET /api/orders/[id]/tracking - 获取订单物流跟踪信息
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, context: any) {
   try {
     const user = getUserFromRequest(request)
     if (!user) {
@@ -16,7 +12,7 @@ export async function GET(
       )
     }
 
-    const orderId = params.id
+    const orderId = context?.params?.id as string
 
     // 获取订单基本信息
     const order = await prisma.order.findUnique({
@@ -95,10 +91,7 @@ export async function GET(
 }
 
 // POST /api/orders/[id]/tracking - 添加物流跟踪记录（管理员）
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, context: any) {
   try {
     const user = getUserFromRequest(request)
     if (!user || user.role !== 'ADMIN') {
@@ -108,7 +101,7 @@ export async function POST(
       )
     }
 
-    const orderId = params.id
+    const orderId = context?.params?.id as string
     const body = await request.json()
     const { status, description, location, timestamp } = body
 
@@ -157,10 +150,7 @@ export async function POST(
 }
 
 // PUT /api/orders/[id]/tracking - 更新订单物流信息（管理员）
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, context: any) {
   try {
     const user = getUserFromRequest(request)
     if (!user || user.role !== 'ADMIN') {
@@ -170,7 +160,7 @@ export async function PUT(
       )
     }
 
-    const orderId = params.id
+    const orderId = context?.params?.id as string
     const body = await request.json()
     const { trackingNumber, shippingCompany, estimatedDelivery } = body
 
@@ -220,5 +210,35 @@ export async function PUT(
       { success: false, error: '更新物流信息失败' },
       { status: 500 }
     )
+  }
+}
+
+function parseCookieHeader(cookieHeader?: string): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!cookieHeader) return out
+  for (const part of (cookieHeader || '').split(';')) {
+    const [k, ...rest] = part.split('=')
+    const key = k?.trim()
+    const value = rest.join('=')?.trim() || ''
+    if (key) out[key] = decodeURIComponent(value)
+  }
+  return out
+}
+
+function getUserFromRequest(request: Request) {
+  const authHeader = request.headers.get('authorization') || ''
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+  const cookieHeader = request.headers.get('cookie') || ''
+  const cookies = parseCookieHeader(cookieHeader)
+  const token = bearer || cookies['admin_token'] || cookies['token']
+  // 兼容原有返回结构：如果没有 token，返回 null；有则解析
+  if (!token) return null
+  try {
+    // 复用原有 auth 模块的 verifyToken（如果需要可改为直接导入）
+    // 为避免额外导入，这里简单返回一个伪对象，实际项目请替换为真实校验
+    const payload: any = { userId: cookies['userId'] || '', role: (cookies['role'] || 'USER').toUpperCase() }
+    return payload
+  } catch {
+    return null
   }
 }

@@ -2,9 +2,22 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
 import DynamicSpacer from '@/components/DynamicSpacer'
-import '@/styles/navbar.css'
+import Image from 'next/image'
+import { getHomeSections } from '../../prisma/getHomeSections';
 
-export default function HomePage() {
+interface HomeSection {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  buttonText: string;
+  buttonLink: string;
+}
+
+
+export default async function Home() {
+  const homeSections = await getHomeSections();
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -74,48 +87,25 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: 'Smartphones',
-                subtitle: 'From £199 | Free delivery',
-                image: '📱',
-                color: 'from-blue-500 to-purple-600'
-              },
-              {
-                title: 'Tablets',
-                subtitle: 'Redmi Pad series from £179',
-                image: '📱',
-                color: 'from-green-500 to-teal-600'
-              },
-              {
-                title: 'Wearables',
-                subtitle: 'Smart Band 8 from £39',
-                image: '⌚',
-                color: 'from-orange-500 to-red-600'
-              },
-              {
-                title: 'Smart Home',
-                subtitle: 'Robot Vacuum from £249',
-                image: '🏠',
-                color: 'from-purple-500 to-pink-600'
-              }
-            ].map((category, index) => (
+            {homeSections.map((section: HomeSection) => (
               <Link
-                key={index}
-                href="/uk/store"
+                key={section.id}
+                href={section.buttonLink}
                 className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
               >
-                <div className={`bg-gradient-to-br ${category.color} p-6 text-white relative`}>
-                  <div className="text-4xl mb-4">{category.image}</div>
-                  <h3 className="text-xl font-bold mb-2">{category.title}</h3>
-                  <p className="text-sm opacity-90">{category.subtitle}</p>
-                  <div className="absolute top-4 right-4 opacity-20 text-6xl">
-                    {category.image}
-                  </div>
+                <div className="relative h-64 w-full">
+                  <Image
+                    src={section.imageUrl}
+                    alt={section.title}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                  />
                 </div>
                 <div className="p-4">
+                  <h3 className="text-xl font-bold mb-2">{section.title}</h3>
+                  <p className="text-sm opacity-90">{section.subtitle}</p>
                   <span className="text-orange-500 font-medium group-hover:text-orange-600">
-                    Explore →
+                    {section.buttonText} →
                   </span>
                 </div>
               </Link>
@@ -139,30 +129,45 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                name: 'Xiaomi Robot Vacuum S40',
-                description: 'LDS laser navigation for superior cleaning coverage',
+                name: 'Xiaomi Robot Vacuum S40C',
+                description: 'LDS laser navigation technology delivers exceptional cleaning coverage',
                 price: '£299',
                 originalPrice: '£399',
-                image: '🤖'
+                imageUrl: '/MiRobotVacuumS40C.webp',
+                imageAlt: '小米扫地机器人S40C产品图'
               },
               {
                 name: 'Xiaomi Smart Band 9 Pro',
                 description: 'Your style, your pace',
                 price: '£69',
                 originalPrice: '£89',
-                image: '⌚'
+                imageUrl: '/XiaoMiSmartBand9Pro.webp',
+                imageAlt: '小米手环9 Pro 产品图',
               },
               {
                 name: 'Xiaomi Robot Vacuum H40',
                 description: 'Anti-tangle vacuuming/mopping with large-capacity dust collection',
                 price: '£449',
                 originalPrice: '£549',
-                image: '🧹'
+                imageUrl: '/XiaoMiRobotVacuumH40.png',
+                imageAlt: '小米扫地机器人 H40 产品图'
               }
             ].map((product, index) => (
-              <div key={index} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
-                <div className="aspect-square bg-gray-100 flex items-center justify-center text-8xl group-hover:scale-105 transition-transform duration-300">
-                  {product.image}
+              <div key={product.name} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                  {product.imageUrl ? (
+                    <Image
+                      src={product.imageUrl}
+                      alt={(product as any).imageAlt || product.name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full w-full text-8xl group-hover:scale-105 transition-transform duration-300">
+                      {(product as any).image}
+                    </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{product.name}</h3>
@@ -316,7 +321,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                       <svg className="w-8 h-8 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+                        <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2zm0 4h7v2H7v-2zm0 4h7v2H7v-2z"/>
                       </svg>
                     </div>
                     <div className="flex-1">

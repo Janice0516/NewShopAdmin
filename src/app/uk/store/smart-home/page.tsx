@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
@@ -184,10 +184,62 @@ export default function SmartHomePage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 800))
-      setProducts(smartHomeProducts)
-      setLoading(false)
+      try {
+        setLoading(true)
+        // 获取分类，优先匹配中文“智能家居”，否则回退英文别名
+        const catRes = await fetch('/api/categories', { cache: 'no-store' })
+        const cats = await catRes.json()
+        const matchNames = ['智能家居', 'Smart Home', 'Home Goods']
+        const target = Array.isArray(cats)
+          ? (cats.find((c: any) => c.code === 'smart_home') ||
+             cats.find((c: any) => {
+               const raw = c.name || ''
+               const lower = raw.toLowerCase()
+               return matchNames.includes(raw) || matchNames.map((n: string) => n.toLowerCase()).includes(lower)
+             }))
+          : null
+        const url = target
+          ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}`
+          : '/api/products?limit=100'
+
+        const res = await fetch(url, { cache: 'no-store' })
+        const json = await res.json()
+
+        const inferCategory = (name: string): Product['category'] => {
+          const n = (name || '').toLowerCase()
+          if (n.includes('camera') || n.includes('lock')) return 'security'
+          if (n.includes('bulb') || n.includes('light') || n.includes('ceiling')) return 'lighting'
+          if (n.includes('vacuum') || n.includes('robot')) return 'cleaning'
+          if (n.includes('tv') || n.includes('stick') || n.includes('speaker')) return 'entertainment'
+          if (n.includes('fryer') || n.includes('kitchen')) return 'kitchen'
+          return 'entertainment'
+        }
+
+        const apiProducts = (json?.data?.products || []).map((p: any) => {
+          const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            originalPrice: undefined,
+            image: firstImage,
+            rating: 4.5,
+            reviews: p._count?.orderItems || 0,
+            isNew: false,
+            hasOffer: false,
+            offerText: undefined,
+            badge: undefined,
+            category: inferCategory(p.name),
+            specs: { connectivity: '', compatibility: '', power: '', features: '' }
+          } as Product
+        })
+        setProducts(apiProducts)
+      } catch (e) {
+        console.error('Failed to load smart-home products:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchProducts()
@@ -238,7 +290,11 @@ export default function SmartHomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <ClosableBanner />
+      <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
+          🏠 智能家居提示：请以后台商品数据为准
+        </div>
+      </ClosableBanner>
       <Navbar />
       <DynamicSpacer />
       

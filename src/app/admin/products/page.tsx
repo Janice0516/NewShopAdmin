@@ -35,6 +35,7 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
+  const [successBanner, setSuccessBanner] = useState('')
 
   const productsPerPage = 10
 
@@ -58,25 +59,32 @@ export default function ProductsPage() {
     }
   })
 
-  // 转换API数据格式为前端显示格式
-  const products = useMemo(() => {
-    if (!apiData?.products) return []
-    
-    return apiData.products.map((product: any) => ({
+  // 转换API数据格式为前端显示格式并存入本地状态，便于后续操作与UI交互
+  const [products, setProducts] = useState<Product[]>([])
+  useEffect(() => {
+    if (!apiData?.products) {
+      setProducts([])
+      return
+    }
+    const mapped = apiData.products.map((product: any) => ({
       id: product.id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
       originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
-      category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
-      brand: '未知品牌', // API中没有brand字段，使用默认值
+      // 修复：优先使用分类名称
+      category: product.category?.name || product.categoryId,
+      // 新增：品牌中文优先取后端 brandText
+      brand: product.brandText || '未知品牌',
       stock: product.stock,
-      status: product.isActive ? 'active' : 'inactive',
-      image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
+      // 新增：优先使用后端提供的 status
+      status: product.status || (product.stock === 0 ? 'out_of_stock' : (product.isActive ? 'active' : 'inactive')),
+      image: product.images?.[0] || '📦',
       createdAt: new Date(product.createdAt).toLocaleDateString(),
       sales: product.sold || 0,
-      rating: 4.5 // 默认评分，API中没有此字段
+      rating: 4.5
     }))
+    setProducts(mapped)
   }, [apiData])
 
   // 获取所有分类
@@ -116,33 +124,32 @@ export default function ProductsPage() {
 
   // 处理商品添加成功后的实时更新
   const handleProductAdded = (newProduct: any) => {
-    // 格式化新商品数据
     const formattedProduct = {
       id: newProduct.id,
       name: newProduct.name,
       description: newProduct.description,
       price: parseFloat(newProduct.price),
       originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
-      category: newProduct.categoryId,
-      brand: '未知品牌',
+      // 修复：优先使用分类名称
+      category: newProduct.category?.name || newProduct.categoryId,
+      // 新增：品牌中文优先取后端 brandText
+      brand: newProduct.brandText || '未知品牌',
       stock: newProduct.stock,
-      status: newProduct.isActive ? 'active' : 'inactive',
+      // 新增：优先使用后端提供的 status
+      status: newProduct.status || (newProduct.stock === 0 ? 'out_of_stock' : (newProduct.isActive ? 'active' : 'inactive')),
       image: newProduct.images?.[0] || '📦',
       createdAt: new Date(newProduct.createdAt).toLocaleDateString(),
       sales: newProduct.sold || 0,
       rating: 4.5
     }
-    
-    // 使用实时同步Hook的addItem方法
     addProduct(formattedProduct)
     setShowAddModal(false)
-    
-    // 手动刷新数据确保同步
     refreshProducts()
+    setSuccessBanner('商品添加成功！')
+    setTimeout(() => setSuccessBanner(''), 3000)
   }
 
   const handleAddSuccess = () => {
-    // 重新加载商品数据
     const fetchProducts = async () => {
       try {
         const response = await fetch('/api/products', {
@@ -152,21 +159,23 @@ export default function ProductsPage() {
         if (response.ok) {
           const result = await response.json()
           if (result.success && result.data?.products) {
-            // 转换API数据格式为前端需要的格式
             const formattedProducts: Product[] = result.data.products.map((product: any) => ({
               id: product.id,
               name: product.name,
               description: product.description,
               price: parseFloat(product.price),
               originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
-              category: product.categoryId, // 暂时使用categoryId，后续可以映射为分类名称
-              brand: '未知品牌', // API中没有brand字段，使用默认值
+              // 修复：优先使用分类名称
+              category: product.category?.name || product.categoryId,
+              // 新增：品牌中文优先取后端 brandText
+              brand: product.brandText || '未知品牌',
               stock: product.stock,
-              status: product.isActive ? 'active' : 'inactive',
-              image: product.images?.[0] || '📦', // 使用第一张图片或默认图标
+              // 新增：优先使用后端提供的 status
+              status: product.status || (product.stock === 0 ? 'out_of_stock' : (product.isActive ? 'active' : 'inactive')),
+              image: product.images?.[0] || '📦',
               createdAt: new Date(product.createdAt).toLocaleDateString(),
               sales: product.sold || 0,
-              rating: 4.5 // 默认评分，API中没有此字段
+              rating: 4.5
             }))
             setProducts(formattedProducts)
           }
@@ -220,8 +229,54 @@ export default function ProductsPage() {
     }
   }
 
+  // 图片解析与预览模态框状态
+  const resolveImageSrc = (image: string) => {
+    if (!image) return '/file.svg'
+    const trimmed = String(image).trim()
+    if (
+      trimmed.startsWith('http') ||
+      trimmed.startsWith('/') ||
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('blob:')
+    ) {
+      return trimmed
+    }
+    return '/file.svg'
+  }
+
+  // 新增：安全描述提取，避免将图片链接或 blob 文本当作描述渲染
+  const getSafeDescription = (desc?: string) => {
+    const t = (desc || '').trim()
+    if (!t) return ''
+    const looksLikeUrl = t.startsWith('http') || t.startsWith('blob:') || t.startsWith('data:') || t.startsWith('/')
+    return looksLikeUrl ? '' : t
+  }
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewSrc, setPreviewSrc] = useState('')
+  const [previewName, setPreviewName] = useState('')
+  const [zoom, setZoom] = useState(1)
+
+  const openPreview = (src: string, name: string) => {
+    setPreviewSrc(resolveImageSrc(src))
+    setPreviewName(name)
+    setZoom(1)
+    setPreviewOpen(true)
+  }
+
+  const closePreview = () => setPreviewOpen(false)
+
+  const handleWheel = (e: any) => {
+    e.preventDefault()
+    setZoom((prev) => Math.min(5, Math.max(0.5, prev + (e.deltaY < 0 ? 0.1 : -0.1))))
+  }
+
   return (
     <div className="space-y-6">
+      {successBanner && (
+        <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {successBanner}
+        </div>
+      )}
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
@@ -391,12 +446,24 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="text-4xl mr-4">{product.image}</div>
+                      <div className="w-16 h-16 mr-4 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
+                        <img
+                           src={resolveImageSrc(product.image)}
+                           alt={product.name}
+                           className="w-full h-full object-cover"
+                           loading="lazy"
+                           onError={(ev) => { const img = ev.currentTarget as HTMLImageElement; img.src = '/file.svg'; img.classList.remove('object-cover'); img.classList.add('object-contain'); }}
+                           onClick={() => openPreview(product.image, product.name)}
+                           style={{ cursor: 'zoom-in' }}
+                         />
+                      </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        <div className="text-sm text-gray-500 max-w-xs truncate">
-                          {product.description}
-                        </div>
+                        <div className="text-base font-medium text-gray-900">{product.name}</div>
+                        {getSafeDescription(product.description) && (
+                          <div className="text-sm text-gray-500 max-w-xs truncate" title={getSafeDescription(product.description)}>
+                            {getSafeDescription(product.description)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -460,6 +527,31 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* 图片预览模态框 */}
+        {previewOpen && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center" onClick={closePreview}>
+            <div className="relative bg-white rounded-lg shadow-xl p-4 max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-900">{previewName}</h3>
+                <div className="flex items-center gap-2">
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(z => Math.min(5, z + 0.1))}>+</button>
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}>-</button>
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(1)}>重置</button>
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={closePreview}>关闭</button>
+                </div>
+              </div>
+              <div className="overflow-auto" onWheel={handleWheel} style={{ maxWidth: '85vw', maxHeight: '70vh' }}>
+                <img
+                  src={resolveImageSrc(previewSrc)}
+                  alt={previewName}
+                  className="mx-auto object-contain"
+                  style={{ transform: `scale(${zoom})`, transition: 'transform 150ms ease', transformOrigin: 'center center' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (

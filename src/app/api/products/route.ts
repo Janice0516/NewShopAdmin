@@ -4,6 +4,9 @@ import { getUserFromRequest } from '@/lib/auth'
 import { validateProduct, defaultProductRules } from '@/utils/validation'
 import { prisma } from '@/lib/prisma'
 import { apiLimiter, rateLimit } from '@/middleware/rateLimit'
+import { writeFile, mkdir, access } from 'fs/promises'
+import path from 'path'
+import crypto from 'crypto'
 
 // 使用共享的Prisma实例而不是创建新实例
 // const prisma = new PrismaClient()
@@ -94,11 +97,19 @@ export async function GET(request: NextRequest) {
     }
     
     if (category) {
-      where.category = category
+      // 修复：使用 categoryId 进行过滤
+      where.categoryId = category
     }
     
+    // 修复：根据传入的中文状态枚举映射到数据库字段
     if (status) {
-      where.status = status
+      if (status === 'active') {
+        where.isActive = true
+      } else if (status === 'inactive') {
+        where.isActive = false
+      } else if (status === 'out_of_stock') {
+        where.stock = 0
+      }
     }
 
     // 如果提供了lastModified，只返回更新的数据
@@ -109,7 +120,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取商品列表
-    const products = await prisma.product.findMany({
+    const rawProducts = await prisma.product.findMany({
       where,
       skip,
       take: limit,
@@ -117,12 +128,35 @@ export async function GET(request: NextRequest) {
         [sortBy]: sortOrder
       },
       include: {
+        // 返回分类信息以便前端显示分类名称
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
         _count: {
           select: {
             orderItems: true
           }
         }
       }
+    })
+    
+    // 规范化图片字段：数据库中存为JSON字符串，这里解析为数组供前端使用
+    const products = rawProducts.map((p: any) => {
+      let imgs: any[] = []
+      try {
+        if (Array.isArray(p.images)) {
+          imgs = p.images
+        } else if (typeof p.images === 'string') {
+          const parsed = JSON.parse(p.images)
+          imgs = Array.isArray(parsed) ? parsed : []
+        }
+      } catch (e) {
+        imgs = []
+      }
+      return { ...p, images: imgs }
     })
 
     // 获取总数
@@ -255,6 +289,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 新增：将 dataURL 图片保存到 public/images 并改为稳定 URL
+    const imagesDir = path.join(process.cwd(), 'public', 'images')
+    try {
+      await access(imagesDir)
+    } catch {
+      await mkdir(imagesDir, { recursive: true })
+    }
+
+    const storedImages: string[] = []
+    if (Array.isArray(images)) {
+      for (const img of images) {
+        if (typeof img === 'string' && img.startsWith('data:')) {
+          // 提取 mime 与数据
+          const match = img.match(/^data:(.*?);base64,(.*)$/)
+          if (match) {
+            const mime = match[1] || 'image/png'
+            const data = match[2]
+            const buffer = Buffer.from(data, 'base64')
+            const ext = mime.includes('jpeg') ? 'jpg' : mime.split('/')[1] || 'png'
+            const filename = `${crypto.randomBytes(8).toString('hex')}.${ext}`
+            const filePath = path.join(imagesDir, filename)
+            await writeFile(filePath, buffer)
+            storedImages.push(`/images/${filename}`)
+          }
+        } else if (typeof img === 'string' && img.trim() !== '') {
+          storedImages.push(img)
+        }
+      }
+    }
+
     // 创建商品
     const product = await prisma.product.create({
       data: {
@@ -262,7 +326,7 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         price: parseFloat(price),
         categoryId,
-        images: images || [],
+        images: JSON.stringify(storedImages),
         stock: parseInt(stock) || 0,
         isActive: true
       },
@@ -276,12 +340,26 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // 将 images 从 JSON 字符串标准化为数组，保证与 GET 返回一致
+    let normalizedImages: string[] = []
+    try {
+      if (Array.isArray(product.images)) {
+        normalizedImages = product.images as unknown as string[]
+      } else if (typeof product.images === 'string') {
+        const parsed = JSON.parse(product.images)
+        normalizedImages = Array.isArray(parsed) ? parsed : []
+      }
+    } catch (e) {
+      normalizedImages = []
+    }
+    const normalizedProduct = { ...product, images: normalizedImages }
+
     // 清除缓存以确保数据一致性
     clearProductCache()
 
     return NextResponse.json({
       success: true,
-      data: product,
+      data: normalizedProduct,
       message: '商品创建成功'
     })
   } catch (error) {

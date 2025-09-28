@@ -6,7 +6,7 @@ import { getUserFromRequest } from '@/lib/auth'
 export const runtime = 'nodejs'
 
 // 需要登录才能访问的路由
-const protectedRoutes = ['/dashboard', '/profile', '/orders', '/admin']
+const protectedRoutes = ['/dashboard', '/profile', '/orders', '/admin', '/cart']
 
 // 管理员专用路由 - 包含所有admin子路径
 const adminRoutes = ['/admin']

@@ -875,3 +875,72 @@
     display: flex;
   }
 }
+/* Wearables 新两栏布局样式 */
+.wearables-dropdown-content {
+  position: fixed;
+  left: 0; right: 0; top: 64px;
+  width: 100%;
+  height: 90vh;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border-radius: 0;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  padding: 24px 40px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .15s ease, visibility .15s ease;
+  pointer-events: none;
+}
+.dropdown:hover .wearables-dropdown-content,
+.dropdown.show .wearables-dropdown-content {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+
+.wearables-left {
+  border-right: 1px solid #eee;
+  padding-right: 24px;
+}
+.wearables-categories { list-style: none; margin: 0; padding: 0; }
+.wearables-categories li { margin: 10px 0; }
+.wearables-cat-link { color: #333; font-size: 15px; text-decoration: none; }
+.wearables-cat-link:hover { color: #ff6900; }
+
+.wearables-right { padding-left: 8px; display: flex; flex-direction: column; }
+.wearables-header { margin-bottom: 12px; }
+
+.wearables-shelf {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.wearables-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.wearables-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+.new-badge {
+  position: absolute; top: 8px; left: 8px;
+  background: #ff6900; color: #fff;
+  font-size: 12px; padding: 2px 6px; border-radius: 999px;
+}
+.image-wrap { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.image-wrap img { width: 100%; height: 100%; object-fit: contain; }
+.product-name { margin-top: 8px; font-size: 14px; color: #111; text-align: center; }
+
+@media (max-width: 1200px) {
+  .wearables-shelf { grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+}
+@media (max-width: 992px) {
+  .wearables-dropdown-content { height: auto; grid-template-columns: 1fr; }
+  .wearables-left { border-right: none; padding-right: 0; }
+  .wearables-right { padding-left: 0; }
+  .wearables-shelf { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}

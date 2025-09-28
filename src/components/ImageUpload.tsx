@@ -17,6 +17,7 @@ interface UploadedImage {
   preview: string
   thumbnail?: string
   compressed?: File
+  dataUrl?: string
   uploading: boolean
   progress: number
   error?: string
@@ -32,6 +33,16 @@ export default function ImageUpload({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 将 File 转换为 data URL，便于持久化存储
+  const fileToDataUrl = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(new Error('图片转换失败'))
+      reader.readAsDataURL(file)
+    })
+  }, [])
 
   const handleFileSelect = useCallback(async (files: FileList) => {
     const fileArray = Array.from(files)
@@ -79,15 +90,17 @@ export default function ImageUpload({
           quality: 0.8 
         })
 
+        // 转换为 data URL 以持久化（避免 blob URL 刷新失效）
+        const dataUrl = await fileToDataUrl(compressed)
+
         setUploadedImages(prev => prev.map(img => 
           img.id === imageId 
-            ? { ...img, thumbnail, compressed, uploading: false, progress: 100 }
+            ? { ...img, thumbnail, compressed, dataUrl, uploading: false, progress: 100 }
             : img
         ))
 
-        // 更新父组件的图片列表
-        const compressedUrl = createPreviewUrl(compressed)
-        onChange([...images, compressedUrl])
+        // 更新父组件的图片列表（使用 data URL）
+        onChange([...images, dataUrl])
 
       } catch (error) {
         setUploadedImages(prev => prev.map(img => 
@@ -98,7 +111,7 @@ export default function ImageUpload({
         onError?.(`图片 ${file.name} 处理失败`)
       }
     }
-  }, [uploadedImages, maxImages, maxFileSize, onError, images, onChange])
+  }, [uploadedImages, maxImages, maxFileSize, onError, images, onChange, fileToDataUrl])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -124,6 +137,7 @@ export default function ImageUpload({
     setUploadedImages(prev => {
       const imageToRemove = prev.find(img => img.id === imageId)
       if (imageToRemove) {
+        // 清理临时预览资源
         revokePreviewUrl(imageToRemove.preview)
         if (imageToRemove.thumbnail) revokePreviewUrl(imageToRemove.thumbnail)
         if (imageToRemove.compressed) revokePreviewUrl(createPreviewUrl(imageToRemove.compressed))
@@ -131,10 +145,10 @@ export default function ImageUpload({
       return prev.filter(img => img.id !== imageId)
     })
 
-    // 更新父组件的图片列表
+    // 更新父组件的图片列表（使用 data URL）
     const remainingImages = uploadedImages
       .filter(img => img.id !== imageId)
-      .map(img => img.compressed ? createPreviewUrl(img.compressed) : img.preview)
+      .map(img => img.dataUrl || img.preview)
     onChange(remainingImages)
   }, [uploadedImages, onChange])
 

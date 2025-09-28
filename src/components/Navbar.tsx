@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { menuData } from "../data/menu";
 import { Menu, X } from "lucide-react"; // 汉堡菜单图标
+import Image from "next/image";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,8 +47,16 @@ export default function Navbar() {
       <div className="navbar-container">
         {/* Logo */}
         <div className="nav-left">
-          <Link href="/" className="logo-link">
-            <span className="logo">MI</span>
+          <Link href="/" className="logo-link" aria-label="Xiaomi 首页">
+            {/* 使用 Next.js Image 以获得更清晰的缩放效果 */}
+            <Image
+              src="/Xiaomi_logo_(2021-).svg.png"
+              alt="Xiaomi Logo"
+              width={28}
+              height={28}
+              className="rounded-sm"
+              priority
+            />
           </Link>
         </div>
 
@@ -66,8 +75,46 @@ export default function Navbar() {
                   <div 
                     className={`dropdown ${activeDropdown === item.title ? 'show' : ''}`}
                   >
-                    {/* 检查是否为Store/Wearables的三栏布局或Smart Home的两栏布局 */}
-                    {(item.title === "Store" || item.title === "Wearables") && typeof item.children === 'object' && 'leftColumn' in item.children ? (
+                    {/* Wearables 专用两栏布局（左侧分类 + 右侧产品货架） */}
+                    {item.title === "Wearables" && typeof item.children === 'object' && 'leftColumn' in item.children ? (
+                      <div 
+                        className={`wearables-dropdown-content`}
+                        onMouseEnter={handleDropdownMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        <div className="wearables-left">
+                          <h3 className="column-title">{item.children.leftColumn?.title}</h3>
+                          <ul className="wearables-categories">
+                            {item.children.leftColumn?.items?.map((subItem, i) => (
+                              <li key={i}>
+                                <Link href={subItem.href} className="wearables-cat-link">{subItem.title}</Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="wearables-right">
+                          <div className="wearables-header">
+                            <h3 className="column-title">{item.children.rightColumn?.title?.replace(' >', '')}</h3>
+                          </div>
+                          <div className="wearables-shelf">
+                            {item.children.rightColumn?.items?.map((product, i) => (
+                              <div key={i} className="wearables-card">
+                                {(product as any).isNew || i === 0 ? (
+                                  <span className="new-badge">New</span>
+                                ) : null}
+                                <Link href={product.href} className="product-link">
+                                  <div className="image-wrap">
+                                    <img src={product.image} alt={product.title} />
+                                  </div>
+                                  <div className="product-name">{product.title}</div>
+                                </Link>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : item.title === "Store" && typeof item.children === 'object' && 'leftColumn' in item.children ? (
                       <div 
                         className={`${item.title.toLowerCase().replace(/\s+/g, '-')}-dropdown-content`}
                         onMouseEnter={handleDropdownMouseEnter}
@@ -193,14 +240,14 @@ export default function Navbar() {
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
             </button>
-            <button className="cart-btn" aria-label="购物车">
+            <Link href="/cart" className="cart-btn" aria-label="购物车">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 22C9.55228 22 10 21.5523 10 21C10 20.4477 9.55228 20 9 20C8.44772 20 8 20.4477 8 21C8 21.5523 8.44772 22 9 22Z"></path>
                 <path d="M20 22C20.5523 22 21 21.5523 21 21C21 20.4477 20.5523 20 20 20C19.4477 20 19 20.4477 19 21C19 21.5523 19.4477 22 20 22Z"></path>
                 <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6"></path>
               </svg>
-            </button>
-            <Link href="/register" className="user-btn" aria-label="用户中心">
+            </Link>
+            <Link href="/orders" className="user-btn" aria-label="用户中心">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"></path>
                 <circle cx="12" cy="7" r="4"></circle>

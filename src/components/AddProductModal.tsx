@@ -27,6 +27,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
@@ -100,6 +101,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMessage('')
 
     // 提交前进行完整验证
     const isValid = validateAllFields()
@@ -129,10 +131,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const result = await response.json()
 
       if (response.ok) {
-        onSuccess(result.data) // 传递新创建的商品数据
-        onClose()
+        onSuccess(result.data)
+        // 展示成功提示而不是立即关闭
+        setSuccessMessage('商品添加成功！您可以继续添加或关闭窗口。')
+        // 重置表单，方便继续添加
+        setFormData({ name: '', description: '', price: '', stock: '', categoryId: '', images: [] })
       } else {
-        // 处理服务器端验证错误
         if (result.details) {
           setValidationErrors(result.details)
         }
@@ -163,6 +167,24 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="flex items-center justify-between">
+              <span>{successMessage}</span>
+              <div className="flex gap-2">
+                <button
+                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  onClick={() => setSuccessMessage('')}
+                >继续添加</button>
+                <button
+                  className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  onClick={onClose}
+                >关闭</button>
+              </div>
+            </div>
           </div>
         )}
 

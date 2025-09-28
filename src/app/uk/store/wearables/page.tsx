@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
@@ -147,14 +147,48 @@ export default function WearablesPage() {
   ]
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 800))
-      setProducts(wearables)
-      setLoading(false)
+    const load = async () => {
+      try {
+        setLoading(true)
+        const catRes = await fetch('/api/categories', { cache: 'no-store' })
+        const cats = await catRes.json()
+        const matchNames = ['穿戴设备/手表', 'Wearables', 'Wearable', 'Electronics']
+        const target = Array.isArray(cats)
+          ? (cats.find((c: any) => c.code === 'wearable') ||
+             cats.find((c: any) => {
+               const raw = c.name || ''
+               const lower = raw.toLowerCase()
+               return matchNames.includes(raw) || matchNames.map((n: string) => n.toLowerCase()).includes(lower)
+             }))
+          : null
+        const url = target ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}` : '/api/products?limit=100'
+        const res = await fetch(url, { cache: 'no-store' })
+        const json = await res.json()
+        const apiProducts = (json?.data?.products || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: Number(p.price) || 0,
+          originalPrice: undefined,
+          image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg',
+          rating: 4.5,
+          reviews: p._count?.orderItems || 0,
+          isNew: false,
+          hasOffer: false,
+          offerText: undefined,
+          badge: undefined,
+          category: 'smartwatch',
+          specs: { battery: '', connectivity: '', features: '', compatibility: '' }
+        }))
+        setProducts(apiProducts)
+      } catch (e) {
+        console.error('Failed to load wearables:', e)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
-    fetchProducts()
+    load()
   }, [])
 
   const filteredProducts = products.filter(product => {
@@ -198,7 +232,11 @@ export default function WearablesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ClosableBanner />
+      <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
+          ⌚ 可穿戴设备频道提示：商品信息以后台数据为准
+        </div>
+      </ClosableBanner>
       <Navbar />
       <DynamicSpacer />
       
