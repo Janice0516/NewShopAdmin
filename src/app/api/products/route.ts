@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    console.log('用户信息:', user)
+    // 移除敏感日志：不打印用户信息
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
@@ -376,7 +376,7 @@ export async function PUT(request: NextRequest) {
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }

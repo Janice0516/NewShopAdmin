@@ -48,10 +48,10 @@ export default function TestAnalyticsPage() {
       const response = await fetch('/api/analytics/export?format=json&startDate=2024-01-01&endDate=2024-01-31')
       const data = await response.json()
       console.log('Export test result:', data)
-      alert(data.success ? '导出测试成功！' : `导出测试失败：${data.error}`)
+      alert(data.success ? 'Export test succeeded!' : `Export test failed: ${data.error}`)
     } catch (error) {
       console.error('Export test error:', error)
-      alert('导出测试出错')
+      alert('Export test error')
     }
   }
 

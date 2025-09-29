@@ -137,7 +137,7 @@ export default function OrdersPage() {
   // 批量更新订单状态
   const handleBatchUpdate = async () => {
     if (selectedOrders.length === 0 || !batchStatus) {
-      alert('请选择订单和状态')
+      alert('Please select orders and status')
       return
     }
 
@@ -155,17 +155,17 @@ export default function OrdersPage() {
 
       const data = await response.json()
       if (data.success) {
-        alert(`成功更新 ${data.data.count} 个订单状态`)
+        alert(`Successfully updated ${data.data.count} order statuses`)
         setSelectedOrders([])
         setShowBatchModal(false)
         setBatchStatus('')
         fetchOrders()
       } else {
-        alert('更新失败: ' + data.error)
+        alert('Update failed: ' + data.error)
       }
     } catch (error) {
       console.error('批量更新失败:', error)
-      alert('更新失败')
+      alert('Update failed')
     }
   }
 
@@ -193,11 +193,11 @@ export default function OrdersPage() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('导出失败')
+        alert('Export failed')
       }
     } catch (error) {
       console.error('导出失败:', error)
-      alert('导出失败')
+      alert('Export failed')
     } finally {
       setExporting(false)
     }
@@ -218,17 +218,17 @@ export default function OrdersPage() {
 
       const data = await response.json()
       if (data.success) {
-        alert('订单状态更新成功')
+        alert('Order status updated successfully')
         fetchOrders()
         if (selectedOrder && selectedOrder.id === orderId) {
           setSelectedOrder(data.data)
         }
       } else {
-        alert('更新失败: ' + data.error)
+        alert('Update failed: ' + data.error)
       }
     } catch (error) {
       console.error('更新订单状态失败:', error)
-      alert('更新失败')
+      alert('Update failed')
     }
   }
 

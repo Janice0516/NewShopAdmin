@@ -7,6 +7,7 @@ import ClosableBanner from '@/components/ClosableBanner'
 import DynamicSpacer from '@/components/DynamicSpacer'
 import '@/styles/navbar.css'
 import { ChevronLeftIcon, StarIcon, ShoppingCartIcon, HeartIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import NoticeModal from '@/components/NoticeModal'
 
 interface Product {
   id: string
@@ -35,6 +36,11 @@ export default function LifestylePage() {
   const [sortBy, setSortBy] = useState('featured')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [priceRange, setPriceRange] = useState('all')
+  const [addingProductId, setAddingProductId] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalDesc, setModalDesc] = useState('')
 
   const lifestyleProducts: Product[] = [
     {
@@ -287,11 +293,58 @@ export default function LifestylePage() {
     }
   }
 
+  useEffect(() => {
+    fetch('/api/auth/verify', { credentials: 'include' })
+      .then(res => setIsAuthenticated(res.status === 200))
+      .catch(() => setIsAuthenticated(false))
+  }, [])
+
+  const handleAddToCart = async (productId: string) => {
+    try {
+      if (!isAuthenticated) {
+        setModalTitle('Sign in required')
+        setModalDesc('Please sign in to add items to your cart.')
+        setModalOpen(true)
+        return
+      }
+      setAddingProductId(productId)
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: 1 }),
+        credentials: 'include'
+      })
+      if (res.status === 401) {
+        setModalTitle('Session expired')
+        setModalDesc('Please sign in again to continue shopping.')
+        setModalOpen(true)
+        return
+      }
+      const json = await res.json()
+      if (json?.success) {
+        setModalTitle('Added to cart')
+        setModalDesc('The item has been added to your cart.')
+        setModalOpen(true)
+      } else {
+        setModalTitle('Add to cart failed')
+        setModalDesc(json?.error || 'Unable to add the item to your cart. Please try again later.')
+        setModalOpen(true)
+      }
+    } catch (e) {
+      console.error('Failed to add to cart:', e)
+      setModalTitle('Add to cart failed')
+      setModalDesc('A network error occurred. Please try again later.')
+      setModalOpen(true)
+    } finally {
+      setAddingProductId(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
-          🛍️ 温馨提示：生活方式类商品以后台上架为准
+          🛍️ Notice: Lifestyle products are based on backend listings
         </div>
       </ClosableBanner>
       <Navbar />
@@ -533,9 +586,9 @@ export default function LifestylePage() {
 
                   {/* Buttons */}
                   <div className="space-y-2">
-                    <button className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center">
+                    <button className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center" onClick={() => handleAddToCart(product.id)} disabled={addingProductId === product.id}>
                       <ShoppingCartIcon className="h-4 w-4 mr-2" />
-                      Add to Cart
+                      {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
                     </button>
                     <Link
                       href={`/uk/store/lifestyle/${product.id}`}
@@ -550,6 +603,14 @@ export default function LifestylePage() {
           </div>
         )}
       </div>
+      <NoticeModal
+        isOpen={modalOpen}
+        title={modalTitle}
+        description={modalDesc}
+        onClose={() => setModalOpen(false)}
+        primaryAction={!isAuthenticated ? { label: 'Sign in', onClick: () => { setModalOpen(false); window.location.href = '/login' } } : undefined}
+        secondaryAction={!isAuthenticated ? { label: 'Continue browsing', onClick: () => setModalOpen(false) } : undefined}
+      />
     </div>
   )
 }

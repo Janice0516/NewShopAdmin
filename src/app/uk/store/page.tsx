@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar'
 import ClosableBanner from '@/components/ClosableBanner'
 import DynamicSpacer from '@/components/DynamicSpacer'
 import '@/styles/navbar.css'
+import NoticeModal from '@/components/NoticeModal'
 
 interface Product {
   id: string
@@ -36,6 +37,11 @@ export default function UKStorePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [addingProductId, setAddingProductId] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [modalOpen, setModalOpen] = useState<boolean>(false)
+  const [modalTitle, setModalTitle] = useState<string>('')
+  const [modalDesc, setModalDesc] = useState<string>('')
 
   // 产品分类
   const categories: Category[] = [
@@ -221,17 +227,67 @@ export default function UKStorePage() {
     fetchProducts()
   }, [])
 
+  useEffect(() => {
+    fetch('/api/auth/verify', { credentials: 'include' })
+      .then(res => setIsAuthenticated(res.status === 200))
+      .catch(() => setIsAuthenticated(false))
+  }, [])
+
+  async function handleAddToCart(productId: string) {
+    try {
+      setAddingProductId(productId)
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: 1 }),
+        credentials: 'include'
+      })
+      if (res.status === 401) {
+        setModalTitle('Session expired')
+        setModalDesc('Please sign in again to continue shopping.')
+        setModalOpen(true)
+        return
+      }
+      const json = await res.json()
+      if (json?.success) {
+        setModalTitle('Added to cart')
+        setModalDesc('The item has been added to your cart.')
+        setModalOpen(true)
+      } else {
+        setModalTitle('Add to cart failed')
+        setModalDesc(json?.error || 'Unable to add the item to your cart. Please try again later.')
+        setModalOpen(true)
+      }
+    } catch (e) {
+      console.error('Failed to add to cart:', e)
+      setModalTitle('Add to cart failed')
+      setModalDesc('A network error occurred. Please try again later.')
+      setModalOpen(true)
+    } finally {
+      setAddingProductId(null)
+    }
+  }
+
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(product => product.category === selectedCategory)
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Notice Modal */}
+      <NoticeModal
+        isOpen={modalOpen}
+        title={modalTitle}
+        description={modalDesc}
+        onClose={() => setModalOpen(false)}
+        primaryAction={!isAuthenticated ? { label: 'Sign in', onClick: () => { setModalOpen(false); window.location.href = '/login' } } : undefined}
+        secondaryAction={!isAuthenticated ? { label: 'Continue browsing', onClick: () => setModalOpen(false) } : undefined}
+      />
       <Navbar />
       <DynamicSpacer />
       <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
-          🎉 特惠提示：部分商品支持优惠与赠品活动，详情以商品页为准
+          🎉 Promo Notice: Some products support promotions and gifts; details are on the product page
         </div>
       </ClosableBanner>
       {/* Promotional Banner */}
@@ -522,9 +578,9 @@ export default function UKStorePage() {
                     )}
 
                     {/* Add to Cart Button */}
-                    <button className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center">
+                    <button className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center" onClick={() => handleAddToCart(product.id)} disabled={addingProductId === product.id}>
                       <ShoppingCartIcon className="h-5 w-5 mr-2" />
-                      Add to Cart
+                      {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
                     </button>
                   </div>
                 </div>
@@ -778,7 +834,7 @@ export default function UKStorePage() {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                       <svg className="w-8 h-8 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+                        <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2zm0 4h7v2H7v-2zm0 4h7v2H7v-2zm0 4h7v2H7v-2z"/>
                       </svg>
                     </div>
                     <div className="flex-1">

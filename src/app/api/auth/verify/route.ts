@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!userPayload) {
       return NextResponse.json(
         { error: '未登录' },
-        { status: 401 }
+        { status: 401, headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Vary': 'Cookie, Authorization' } }
       )
     }
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: '用户不存在' },
-        { status: 404 }
+        { status: 404, headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Vary': 'Cookie, Authorization' } }
       )
     }
 
@@ -42,13 +42,14 @@ export async function GET(request: NextRequest) {
         role: user.role,
         createdAt: user.createdAt
       }
-    })
+    }, { headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Vary': 'Cookie, Authorization' } })
 
   } catch (error: any) {
-    console.error('用户验证错误:', error)
+    // 统一为非敏感错误日志
+    console.error('用户验证错误')
     return NextResponse.json(
       { error: '验证失败' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Vary': 'Cookie, Authorization' } }
     )
   }
 }

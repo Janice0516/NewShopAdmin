@@ -43,13 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 生成JWT token
-    console.log('生成token前的用户信息:', { userId: user.id, email: user.email, role: user.role })
     const token = generateToken({
       userId: user.id,
       email: user.email,
       role: user.role
     })
-    console.log('生成的token:', token ? '成功' : '失败')
 
     const response = NextResponse.json({
       message: '管理员登录成功',
@@ -59,15 +57,14 @@ export async function POST(request: NextRequest) {
         name: user.name,
         role: user.role,
         createdAt: user.createdAt
-      },
-      token
+      }
     })
 
     // 设置cookie
     response.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7, // 7天
       path: '/' // 修改为根路径，确保所有admin子路径都能访问
     })
@@ -80,11 +77,12 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7 // 7天
     })
 
+    // 防缓存
+    response.headers.set('Cache-Control', 'no-store')
+
     return response
 
   } catch (error: any) {
-    console.error('管理员登录错误:', error)
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0].message },

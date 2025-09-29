@@ -145,7 +145,7 @@ export default function ProductsPage() {
     addProduct(formattedProduct)
     setShowAddModal(false)
     refreshProducts()
-    setSuccessBanner('商品添加成功！')
+    setSuccessBanner('Product added successfully!')
     setTimeout(() => setSuccessBanner(''), 3000)
   }
 
@@ -189,7 +189,7 @@ export default function ProductsPage() {
   }
 
   const handleDeleteProduct = (productId: string) => {
-    if (confirm('确定要删除这个商品吗？')) {
+    if (confirm('Are you sure you want to delete this product?')) {
       setProducts(prev => prev.filter(product => product.id !== productId))
       setSelectedProducts(prev => prev.filter(id => id !== productId))
     }
@@ -197,7 +197,7 @@ export default function ProductsPage() {
 
   const handleBatchDelete = () => {
     if (selectedProducts.length === 0) return
-    if (confirm(`确定要删除选中的 ${selectedProducts.length} 个商品吗？`)) {
+    if (confirm(`Are you sure you want to delete the selected ${selectedProducts.length} products?`)) {
       setProducts(prev => prev.filter(product => !selectedProducts.includes(product.id)))
       setSelectedProducts([])
     }
@@ -537,8 +537,8 @@ export default function ProductsPage() {
                 <div className="flex items-center gap-2">
                   <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(z => Math.min(5, z + 0.1))}>+</button>
                   <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}>-</button>
-                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(1)}>重置</button>
-                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={closePreview}>关闭</button>
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={() => setZoom(1)}>Reset</button>
+                  <button className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" onClick={closePreview}>Close</button>
                 </div>
               </div>
               <div className="overflow-auto" onWheel={handleWheel} style={{ maxWidth: '85vw', maxHeight: '70vh' }}>

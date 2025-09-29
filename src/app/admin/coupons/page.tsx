@@ -151,7 +151,7 @@ export default function CouponsPage() {
   const paginatedCoupons = filteredCoupons.slice(startIndex, startIndex + couponsPerPage)
 
   const handleDeleteCoupon = (couponId: string) => {
-    if (confirm('确定要删除这个优惠券吗？')) {
+    if (confirm('Are you sure you want to delete this coupon?')) {
       setCoupons(prev => prev.filter(coupon => coupon.id !== couponId))
     }
   }

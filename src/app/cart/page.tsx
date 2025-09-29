@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { TrashIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
 import './cart.css'
@@ -19,19 +19,87 @@ interface CartItem {
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch('/api/cart', { cache: 'no-store' })
+        if (res.status === 401) {
+          alert('Please log in to view your cart')
+          window.location.href = '/login'
+          return
+        }
+        const json = await res.json()
+        if (json?.success) {
+          const items: CartItem[] = json.data || []
+          setCartItems(items)
+          // 默认选中所有在库商品
+          setSelectedItems(items.filter(i => i.inStock).map(i => i.id))
+        } else {
+          alert(json?.error || 'Failed to load cart')
+        }
+      } catch (e) {
+        console.error('加载购物车失败:', e)
+        alert('Failed to load cart, please try again later')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCart()
+  }, [])
+
+  const updateQuantity = async (id: string, newQuantity: number) => {
     if (newQuantity < 1) return
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    )
+    const item = cartItems.find(i => i.id === id)
+    if (!item) return
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: id, quantity: newQuantity })
+      })
+      if (res.status === 401) {
+        alert('Please log in before managing your cart')
+        window.location.href = '/login'
+        return
+      }
+      const json = await res.json()
+      if (json?.success) {
+        setCartItems(items => items.map(it => it.id === id ? { ...it, quantity: newQuantity } : it))
+      } else {
+        alert(json?.error || 'Failed to update quantity')
+      }
+    } catch (e) {
+      console.error('Failed to update quantity:', e)
+      alert('Failed to update quantity, please try again later')
+    }
   }
 
-  const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id))
-    setSelectedItems(selected => selected.filter(itemId => itemId !== id))
+  const removeItem = async (id: string) => {
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: id })
+      })
+      if (res.status === 401) {
+        alert('Please log in before managing your cart')
+        window.location.href = '/login'
+        return
+      }
+      const json = await res.json()
+      if (json?.success) {
+        setCartItems(items => items.filter(item => item.id !== id))
+        setSelectedItems(selected => selected.filter(itemId => itemId !== id))
+      } else {
+        alert(json?.error || 'Delete failed')
+      }
+    } catch (e) {
+      console.error('Failed to delete cart item:', e)
+      alert('Failed to delete cart item, please try again later')
+    }
   }
 
   const toggleSelectItem = (id: string) => {
@@ -53,7 +121,7 @@ export default function CartPage() {
 
   const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.id))
   const totalPrice = selectedCartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  
+
   const handleCheckout = () => {
     if (selectedItems.length === 0) {
       alert('Please select items to checkout')

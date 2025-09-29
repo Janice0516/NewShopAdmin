@@ -201,8 +201,7 @@ export async function POST(request: NextRequest) {
       orderItems.push({
         productId: product.id,
         quantity: item.quantity,
-        price: Number(product.price),
-        total: itemTotal
+        price: Number(product.price)
       })
     }
 

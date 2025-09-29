@@ -58,8 +58,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         isNewUser: user.isNewUser,
         createdAt: user.createdAt
-      },
-      token
+      }
     })
 
     // 设置cookie
@@ -70,11 +69,12 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7 // 7天
     })
 
+    // 防缓存
+    response.headers.set('Cache-Control', 'no-store')
+
     return response
 
   } catch (error: any) {
-    console.error('登录错误:', error)
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0].message },

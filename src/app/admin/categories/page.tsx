@@ -110,7 +110,7 @@ export default function AdminCategoriesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定删除该分类吗？')) return
+    if (!confirm('Are you sure you want to delete this category?')) return
     try {
       const res = await fetch(`/api/categories/${id}`, {
         method: 'DELETE',
@@ -250,7 +250,7 @@ function AddEditForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      alert('分类名称不能为空')
+      alert('Category name cannot be empty')
       return
     }
     try {

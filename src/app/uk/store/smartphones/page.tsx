@@ -7,6 +7,7 @@ import ClosableBanner from '@/components/ClosableBanner'
 import DynamicSpacer from '@/components/DynamicSpacer'
 import '@/styles/navbar.css'
 import { ChevronLeftIcon, StarIcon, ShoppingCartIcon, HeartIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import NoticeModal from '@/components/NoticeModal'
 
 interface Product {
   id: string
@@ -33,7 +34,11 @@ export default function SmartphonesPage() {
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('featured')
   const [priceRange, setPriceRange] = useState('all')
-
+  const [addingProductId, setAddingProductId] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [modalOpen, setModalOpen] = useState<boolean>(false)
+  const [modalTitle, setModalTitle] = useState<string>('')
+  const [modalDesc, setModalDesc] = useState<string>('')
   const smartphones: Product[] = [
     {
       id: '1',
@@ -138,55 +143,57 @@ export default function SmartphonesPage() {
   ]
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true)
-        // 先获取分类列表，找到智能手机分类ID（若不存在则回退到全部）
-        const catRes = await fetch('/api/categories', { cache: 'no-store' })
-        const cats = await catRes.json()
-        const target = Array.isArray(cats)
-          ? cats.find((c: any) => (c.name || '').toLowerCase() === 'smartphones')
-          : null
-        const url = target
-          ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}`
-          : '/api/products?limit=100'
-
-        const res = await fetch(url, { cache: 'no-store' })
-        const json = await res.json()
-        const apiProducts = (json?.data?.products || []).map((p: any) => {
-          const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
-          return {
-            id: p.id,
-            name: p.name,
-            price: Number(p.price) || 0,
-            originalPrice: undefined,
-            image: firstImage,
-            rating: 4.5,
-            reviews: p._count?.orderItems || 0,
-            isNew: false,
-            hasOffer: false,
-            offerText: undefined,
-            badge: undefined,
-            specs: {
-              display: '',
-              camera: '',
-              battery: '',
-              storage: ''
-            }
-          } as Product
-        })
-        setProducts(apiProducts)
-      } catch (e) {
-        console.error('Failed to load smartphones:', e)
-        setProducts([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProducts()
+    fetch('/api/auth/verify', { credentials: 'include' })
+      .then(res => setIsAuthenticated(res.status === 200))
+      .catch(() => setIsAuthenticated(false))
   }, [])
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      // 先获取分类列表，找到智能手机分类ID（若不存在则回退到全部）
+      const catRes = await fetch('/api/categories', { cache: 'no-store' })
+      const cats = await catRes.json()
+      const target = Array.isArray(cats)
+        ? cats.find((c: any) => (c.name || '').toLowerCase() === 'smartphones')
+        : null
+      const url = target
+        ? `/api/products?limit=100&category=${encodeURIComponent(target.id)}`
+        : '/api/products?limit=100'
 
+      const res = await fetch(url, { cache: 'no-store' })
+      const json = await res.json()
+      const apiProducts = (json?.data?.products || []).map((p: any) => {
+        const firstImage = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '/file.svg'
+        return {
+          id: p.id,
+          name: p.name,
+          price: Number(p.price) || 0,
+          originalPrice: undefined,
+          image: firstImage,
+          rating: 4.5,
+          reviews: p._count?.orderItems || 0,
+          isNew: false,
+          hasOffer: false,
+          offerText: undefined,
+          badge: undefined,
+          specs: {
+            display: '',
+            camera: '',
+            battery: '',
+            storage: ''
+          }
+        } as Product
+      })
+      setProducts(apiProducts)
+    } catch (e) {
+      console.error('Failed to load smartphones:', e)
+      setProducts([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchProducts()
   const filteredProducts = products.filter(product => {
     if (priceRange === 'all') return true
     if (priceRange === 'under-300' && product.price < 300) return true
@@ -210,11 +217,60 @@ export default function SmartphonesPage() {
     }
   })
 
+  const handleAddToCart = async (productId: string) => {
+    try {
+      if (!isAuthenticated) {
+        setModalTitle('Sign in required')
+        setModalDesc('Please sign in to add items to your cart.')
+        setModalOpen(true)
+        return
+      }
+      setAddingProductId(productId)
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: 1 }),
+        credentials: 'include'
+      })
+      if (res.status === 401) {
+        setModalTitle('Session expired')
+        setModalDesc('Please sign in again to continue shopping.')
+        setModalOpen(true)
+        return
+      }
+      const json = await res.json()
+      if (json?.success) {
+        setModalTitle('Added to cart')
+        setModalDesc('The item has been added to your cart.')
+        setModalOpen(true)
+      } else {
+        setModalTitle('Add to cart failed')
+        setModalDesc(json?.error || 'Unable to add the item to your cart. Please try again later.')
+        setModalOpen(true)
+      }
+    } catch (e) {
+      console.error('Failed to add to cart:', e)
+      setModalTitle('Add to cart failed')
+      setModalDesc('A network error occurred. Please try again later.')
+      setModalOpen(true)
+    } finally {
+      setAddingProductId(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <NoticeModal
+        isOpen={modalOpen}
+        title={modalTitle}
+        description={modalDesc}
+        onClose={() => setModalOpen(false)}
+        primaryAction={!isAuthenticated ? { label: 'Sign in', onClick: () => { setModalOpen(false); window.location.href = '/login' } } : undefined}
+        secondaryAction={!isAuthenticated ? { label: 'Continue browsing', onClick: () => setModalOpen(false) } : undefined}
+      />
       <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
-          📢 提示：智能手机页价格与库存以后台数据为准
+          📢 Notice: Smartphone prices and inventory are based on backend data
         </div>
       </ClosableBanner>
       <Navbar />
@@ -394,9 +450,9 @@ export default function SmartphonesPage() {
 
                   {/* Buttons */}
                   <div className="space-y-2">
-                    <button className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center">
+                    <button className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center" onClick={() => handleAddToCart(product.id)} disabled={addingProductId === product.id}>
                       <ShoppingCartIcon className="h-5 w-5 mr-2" />
-                      Add to Cart
+                      {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
                     </button>
                     <Link
                       href={`/uk/store/smartphones/${product.id}`}

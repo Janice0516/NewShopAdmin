@@ -73,7 +73,7 @@ export default function TrackingModal({ isOpen, onClose, orderId, orderNo }: Tra
 
   const handleAddRecord = async () => {
     if (!newRecord.status || !newRecord.description) {
-      alert('请填写状态和描述')
+      alert('Please fill in status and description')
       return
     }
 
@@ -92,11 +92,11 @@ export default function TrackingModal({ isOpen, onClose, orderId, orderNo }: Tra
         setShowAddForm(false)
         fetchTrackingData() // 重新获取数据
       } else {
-        alert(result.error || '添加记录失败')
+        alert(result.error || 'Failed to add record')
       }
     } catch (error) {
       console.error('添加跟踪记录失败:', error)
-      alert('添加记录失败')
+      alert('Failed to add record')
     }
   }
 

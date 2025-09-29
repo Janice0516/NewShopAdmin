@@ -105,7 +105,7 @@ export default function UsersPage() {
   }
 
   const handleDeleteUser = (userId: string) => {
-    if (confirm('确定要删除这个用户吗？')) {
+    if (confirm('Are you sure you want to delete this user?')) {
       setUsers(prev => prev.filter(user => user.id !== userId))
       setSelectedUsers(prev => prev.filter(id => id !== userId))
     }
@@ -113,7 +113,7 @@ export default function UsersPage() {
 
   const handleBatchDelete = () => {
     if (selectedUsers.length === 0) return
-    if (confirm(`确定要删除选中的 ${selectedUsers.length} 个用户吗？`)) {
+    if (confirm(`Are you sure you want to delete the selected ${selectedUsers.length} users?`)) {
       setUsers(prev => prev.filter(user => !selectedUsers.includes(user.id)))
       setSelectedUsers([])
     }

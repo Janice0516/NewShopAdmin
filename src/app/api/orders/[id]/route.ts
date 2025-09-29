@@ -134,12 +134,14 @@ export async function PUT(request: Request, context: any) {
     })
 
     if (status === 'SHIPPED') {
-      console.log(`订单 ${orderId} 已发货，用户: ${updatedOrder.user.email}`)
+      // 移除敏感日志：不再输出用户邮箱
+      console.info('订单已发货', { orderId })
     }
 
     return NextResponse.json({ success: true, data: updatedOrder, message: '订单状态更新成功' })
   } catch (error) {
-    console.error('更新订单状态失败:', error)
+    // 统一错误日志为非敏感输出
+    console.error('更新订单状态失败')
     return NextResponse.json({ success: false, error: '更新订单状态失败' }, { status: 500 })
   }
 }
@@ -167,7 +169,8 @@ export async function DELETE(request: Request, context: any) {
 
     return NextResponse.json({ success: true, message: '订单删除成功' })
   } catch (error) {
-    console.error('删除订单失败:', error)
+    // 统一错误日志为非敏感输出
+    console.error('删除订单失败')
     return NextResponse.json({ success: false, error: '删除订单失败' }, { status: 500 })
   }
 }

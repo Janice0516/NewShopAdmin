@@ -75,7 +75,7 @@ export default function FixedNavigation() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center" aria-label="Xiaomi 首页">
+              <Link href="/" className="flex items-center" aria-label="Xiaomi Home">
                 <Image
                   src="/Xiaomi_logo_(2021-).svg.png"
                   alt="Xiaomi Logo"

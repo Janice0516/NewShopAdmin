@@ -42,69 +42,47 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // 模拟获取购物车数据
-    const mockCartItems: CartItem[] = [
-      {
-        id: '1',
-        name: '小米智能台灯Pro',
-        price: 199,
-        quantity: 1,
-        image: '💡'
-      },
-      {
-        id: '2',
-        name: '华为智能音箱',
-        price: 299,
-        quantity: 2,
-        image: '🔊'
+    // 接入真实购物车数据
+    const loadCart = async () => {
+      try {
+        const res = await fetch('/api/cart', { credentials: 'include' })
+        const json = await res.json()
+        if (json.success) {
+          // 后端返回的数据包含 productId/name/price/quantity/image
+          setCartItems(json.data)
+        } else {
+          console.error('获取购物车失败:', json.error)
+        }
+      } catch (e) {
+        console.error('获取购物车异常:', e)
       }
-    ]
-    setCartItems(mockCartItems)
+    }
 
-    // 模拟获取收货地址
-    const mockAddresses: Address[] = [
-      {
-        id: '1',
-        name: '张三',
-        phone: '13800138000',
-        province: '北京市',
-        city: '北京市',
-        district: '朝阳区',
-        detail: '三里屯街道1号院2号楼3单元401室',
-        isDefault: true
-      },
-      {
-        id: '2',
-        name: '李四',
-        phone: '13900139000',
-        province: '上海市',
-        city: '上海市',
-        district: '浦东新区',
-        detail: '陆家嘴金融区世纪大道100号',
-        isDefault: false
+    // 接入真实地址数据
+    const loadAddresses = async () => {
+      try {
+        const res = await fetch('/api/addresses', { credentials: 'include' })
+        const json = await res.json()
+        if (json.success) {
+          setAddresses(json.data)
+          const def = json.data.find((a: Address) => a.isDefault)
+          setSelectedAddress(def?.id || json.data[0]?.id || '')
+        } else {
+          console.error('获取地址失败:', json.error)
+        }
+      } catch (e) {
+        console.error('获取地址异常:', e)
       }
-    ]
-    setAddresses(mockAddresses)
-    setSelectedAddress(mockAddresses.find(addr => addr.isDefault)?.id || '')
+    }
 
-    // 模拟获取可用优惠券
-    const mockCoupons: Coupon[] = [
-      {
-        id: '1',
-        name: '满500减50优惠券',
-        discount: 50,
-        minAmount: 500,
-        type: 'fixed'
-      },
-      {
-        id: '2',
-        name: '新用户9折优惠券',
-        discount: 10,
-        minAmount: 100,
-        type: 'percent'
-      }
-    ]
-    setCoupons(mockCoupons)
+    // 暂时保留本地优惠券占位，后续接入 /api/coupons
+    const loadCoupons = async () => {
+      setCoupons([])
+    }
+
+    loadCart()
+    loadAddresses()
+    loadCoupons()
   }, [])
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -124,7 +102,7 @@ export default function CheckoutPage() {
 
   const handleSubmitOrder = async () => {
     if (!selectedAddress) {
-      alert('请选择收货地址')
+      alert('Please select a shipping address')
       return
     }
 
@@ -133,13 +111,13 @@ export default function CheckoutPage() {
     try {
       const selectedAddr = addresses.find(addr => addr.id === selectedAddress)
       if (!selectedAddr) {
-        alert('收货地址不存在')
+        alert('Shipping address does not exist')
         return
       }
 
       const orderData = {
         items: cartItems.map(item => ({
-          productId: item.id,
+          productId: (item as any).productId || item.id, // 后端返回 productId；兼容旧字段
           quantity: item.quantity
         })),
         shippingAddress: {
@@ -167,15 +145,15 @@ export default function CheckoutPage() {
       const result = await response.json()
 
       if (result.success) {
-        alert('订单提交成功！')
+        alert('Order submitted successfully!')
         // 实际应用中应该跳转到订单详情页或支付页面
         // window.location.href = `/orders/${result.data.id}`
       } else {
-        alert(`订单提交失败：${result.error}`)
+        alert(`Order submission failed: ${result.error}`)
       }
     } catch (error) {
       console.error('提交订单失败:', error)
-      alert('网络错误，请稍后重试')
+      alert('Network error, please try again later')
     } finally {
       setLoading(false)
     }

@@ -24,7 +24,7 @@ export default function ClosableBanner({
     setIsVisible(false)
     if (storageKey && typeof window !== 'undefined') {
       localStorage.setItem(storageKey, 'closed')
-      // 触发自定义事件通知其他组件
+      // Trigger custom event to notify other components
       window.dispatchEvent(new CustomEvent('bannerClosed', { detail: { storageKey } }))
     }
   }
@@ -36,7 +36,7 @@ export default function ClosableBanner({
       <button
         onClick={handleClose}
         className="absolute top-2 right-2 z-10 p-1 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors"
-        aria-label="关闭公告"
+        aria-label="Close banner"
       >
         <X size={16} className="text-current opacity-70 hover:opacity-100" />
       </button>

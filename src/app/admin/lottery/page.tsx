@@ -277,7 +277,7 @@ export default function LotteryPage() {
   const paginatedActivities = filteredActivities.slice(startIndex, startIndex + activitiesPerPage)
 
   const handleDeleteActivity = (activityId: string) => {
-    if (confirm('确定要删除这个抽奖活动吗？')) {
+    if (confirm('Are you sure you want to delete this lottery activity?')) {
       setActivities(prev => prev.filter(activity => activity.id !== activityId))
     }
   }

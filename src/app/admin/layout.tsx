@@ -68,44 +68,36 @@ function AdminLayoutContent({
     // 检查管理员权限
     const checkAuth = async () => {
       try {
-        console.log('开始权限验证...')
-        console.log('当前路径:', pathname)
-        console.log('Cookie信息:', document.cookie)
+        // 移除敏感日志：不再打印路径与 Cookie
         
         // 添加延迟确保cookie已设置
         await new Promise(resolve => setTimeout(resolve, 500))
         
-        console.log('准备调用权限验证API...')
         const response = await fetch('/api/auth/verify', {
           method: 'GET',
           credentials: 'include'
         })
-        console.log('权限验证API调用完成')
-        
-        console.log('权限验证响应状态:', response.status)
         
         if (response.ok) {
           const userData = await response.json()
-          console.log('权限验证响应数据:', userData)
+          // 移除敏感日志：不再输出用户数据
           
           if (userData.user && (userData.user.role === 'ADMIN' || userData.user.role === 'SUPER_ADMIN')) {
-            console.log('权限验证成功，设置用户信息:', userData.user)
             setUser({
               name: userData.user.name || '管理员',
               role: userData.user.role
             })
           } else {
-            console.log('用户角色不符合要求，跳转到登录页面')
-            // 不是管理员，重定向到登录页面
+            // 用户角色不符合要求，跳转到登录页面
             router.push('/admin/login')
           }
         } else {
-          console.log('权限验证失败，状态码:', response.status)
           // 未登录或验证失败，重定向到登录页面
           router.push('/admin/login')
         }
       } catch (error) {
-        console.error('权限验证失败:', error)
+        // 统一错误日志，避免泄漏敏感信息
+        console.error('权限验证失败')
         router.push('/admin/login')
       } finally {
         setIsLoading(false)
@@ -122,7 +114,8 @@ function AdminLayoutContent({
         credentials: 'include'
       })
     } catch (e) {
-      console.error('登出失败', e)
+      // 统一错误日志，避免输出异常细节
+      console.error('登出失败')
     } finally {
       router.push('/login')
     }

@@ -83,7 +83,7 @@ export default function CouponsPage() {
     <div className="min-h-screen bg-gray-50">
       <ClosableBanner className="bg-yellow-50 border-b border-yellow-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-yellow-800">
-          🎫 优惠券提示：请以后台活动为准，部分优惠随时更新
+          🎫 Coupon Notice: Please refer to backend promotions; some offers may update at any time
         </div>
       </ClosableBanner>
       <Navbar />
