@@ -73,3 +73,25 @@
 - [2025-09-28] 本地开发服务器：在 3001 端口启动 Next.js 开发服务并验证 /admin/categories 页面预览。
 
 > 注：以上统计基于工作区相对 HEAD 的状态，以及文件系统的修改时间。某些二进制/资源文件的“行数”仅用于占位估计，实际变更以文件内容为准。
+
+# 新增（本次会话）
+
+- [2025-09-29] src/app/uk/store/lifestyle/page.tsx（64/3）——引入鉴权与 NoticeModal 状态，补齐函数末尾大括号，修复 JSX 结构。
+- [2025-09-29] src/app/uk/store/smart-home/page.tsx（63/3）——将 NoticeModal 放入根 div 内，补齐函数末尾大括号，修复 JSX 结构。
+- [2025-09-29] src/app/uk/store/wearables/page.tsx（65/3）——完善弹窗与鉴权交互，末尾结构校验通过。
+- [2025-09-29] src/components/NoticeModal.tsx（新文件，约 75 行）——新增统一提示弹窗组件（登录拦截/操作反馈）。
+- [2025-09-29] src/app/api/cart/route.ts（新文件，约 198 行）——购物车接口（添加商品），配合前端鉴权校验。
+- [2025-09-29] src/app/api/addresses/route.ts（新文件，约 172 行）——收货地址接口示例。
+
+# 修改（本次会话）
+
+- [2025-09-29] src/app/uk/store/smartphones/page.tsx（106/50）——统一鉴权与 NoticeModal 交互文案。
+- [2025-09-29] src/app/uk/store/tablets/page.tsx（109/52）——统一鉴权与 NoticeModal 交互文案。
+- [2025-09-29] src/app/cart/page.tsx（79/11）——购物车页交互补充，配合新增后端。
+- [2025-09-29] src/app/checkout/page.tsx（43/65）——结算页结构与提示优化。
+- [2025-09-29] src/app/uk/store/page.tsx（60/4）——UK Store 总览页交互与导航优化。
+- [2025-09-29] src/components/ClosableBanner.tsx（2/2）——样式与结构微调。
+- [2025-09-29] src/components/FixedNavigation.tsx（1/1）——导航入口优化。
+- [2025-09-29] src/components/admin/TrackingModal.tsx（3/3）——物流跟踪弹窗优化。
+- [2025-09-29] src/lib/auth.ts（7/11）——鉴权逻辑细化（会话验证与错误处理）。
+- [2025-09-29] src/app/admin/*（多文件小幅更新）——管理后台页面统一样式与细节优化。
