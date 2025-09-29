@@ -106,10 +106,23 @@ export async function GET(request: NextRequest) {
       REFUNDED: stats.find((s: OrderStats) => s.status === 'REFUNDED')?._count.id || 0
     }
 
+    const normalizedOrders = orders.map(order => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      discountAmount: Number(order.discountAmount),
+      finalAmount: Number(order.finalAmount),
+      shippingFee: Number(order.shippingFee),
+      items: (order.items || []).map(item => ({
+        ...item,
+        price: Number(item.price),
+        product: item.product ? { ...item.product, price: Number(item.product.price) } : item.product
+      }))
+    }))
+    
     return NextResponse.json({
       success: true,
       data: {
-        orders,
+        orders: normalizedOrders,
         pagination: {
           page,
           limit,
@@ -314,9 +327,23 @@ export async function POST(request: NextRequest) {
     //   })
     // }
 
+    const normalizedOrder = {
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      discountAmount: Number(order.discountAmount),
+      finalAmount: Number(order.finalAmount),
+      shippingFee: Number(order.shippingFee),
+      items: (order.items || []).map(item => ({
+        ...item,
+        price: Number(item.price),
+        product: item.product ? { ...item.product, price: Number(item.product.price) } : item.product
+      })),
+      user: order.user
+    }
+    
     return NextResponse.json({
       success: true,
-      data: order,
+      data: normalizedOrder,
       message: '订单创建成功'
     })
   } catch (error) {

@@ -78,7 +78,8 @@ export async function PUT(
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    const role = typeof user?.role === 'string' ? user.role.toLowerCase() : ''
+    if (!user || (role !== 'admin' && role !== 'super_admin')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }
@@ -159,7 +160,8 @@ export async function DELETE(
   try {
     // 验证管理员权限
     const user = getUserFromRequest(request)
-    if (!user || user.role !== 'admin') {
+    const role = typeof user?.role === 'string' ? user.role.toLowerCase() : ''
+    if (!user || (role !== 'admin' && role !== 'super_admin')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }

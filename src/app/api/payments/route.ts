@@ -240,13 +240,13 @@ export async function GET(request: NextRequest) {
       paymentNumber: order.paymentId,
       orderId: order.id,
       userId: user.userId,
-      amount: order.totalAmount,
+      amount: Number(order.totalAmount),
       paymentMethod: order.paymentMethod,
       status: order.status === 'PAID' ? 'completed' : 'pending',
       order: {
         id: order.id,
         // orderNumber: order.orderNumber, // 注意：Order模型中没有orderNumber字段
-        totalAmount: order.totalAmount,
+        totalAmount: Number(order.totalAmount),
         status: order.status
       },
       createdAt: order.createdAt,

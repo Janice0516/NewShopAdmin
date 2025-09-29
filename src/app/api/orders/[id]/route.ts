@@ -69,7 +69,24 @@ export async function GET(request: Request, context: any) {
       )
     }
 
-    return NextResponse.json({ success: true, data: order })
+    const normalizedOrder = order ? {
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      discountAmount: Number(order.discountAmount),
+      finalAmount: Number(order.finalAmount),
+      shippingFee: Number(order.shippingFee),
+      items: (order.items || []).map(item => ({
+        ...item,
+        price: Number(item.price),
+        product: item.product ? { ...item.product, price: Number(item.product.price) } : item.product
+      })),
+      coupons: (order.coupons || []).map(c => ({
+        ...c,
+        coupon: c.coupon ? { ...c.coupon, value: Number(c.coupon.value) } : c.coupon
+      }))
+    } : null
+
+    return NextResponse.json({ success: true, data: normalizedOrder })
   } catch (error) {
     console.error('获取订单详情失败:', error)
     return NextResponse.json(

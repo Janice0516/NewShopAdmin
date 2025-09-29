@@ -148,8 +148,8 @@ export async function GET(request: NextRequest) {
       name: productMap[item.productId]?.name || '未知产品',
       category: productMap[item.productId]?.category || '未分类',
       soldQuantity: item._sum.quantity || 0,
-      revenue: item._sum.price || 0,
-      unitPrice: productMap[item.productId]?.price || 0
+      revenue: Number(item._sum.price || 0),
+      unitPrice: Number(productMap[item.productId]?.price || 0)
     }))
 
     if (format === 'excel') {
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         ['总用户数', totalUsers],
         ['总产品数', totalProducts],
         ['总订单数', totalOrders],
-        ['总收入', totalRevenue._sum.totalAmount || 0],
+        ['总收入', Number(totalRevenue._sum.totalAmount || 0)],
         ['报表生成时间', new Date().toLocaleString('zh-CN')]
       ]
       const overviewSheet = XLSX.utils.aoa_to_sheet(overviewData)
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
           item.status === 'CANCELLED' ? '已取消' :
           item.status === 'REFUNDED' ? '已退款' : item.status,
           item._count.id,
-          item._sum.totalAmount || 0
+          Number(item._sum.totalAmount || 0)
         ])
       ]
       const statusSheet = XLSX.utils.aoa_to_sheet(statusData)
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
           order.status === 'DELIVERED' ? '已送达' :
           order.status === 'CANCELLED' ? '已取消' :
           order.status === 'REFUNDED' ? '已退款' : order.status,
-          order.totalAmount,
+          Number(order.totalAmount),
           order.createdAt.toLocaleString('zh-CN'),
           order.paymentMethod || '未知'
         ])

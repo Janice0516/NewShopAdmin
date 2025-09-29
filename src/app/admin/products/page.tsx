@@ -35,6 +35,10 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
+  // 编辑弹窗状态
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingProductId, setEditingProductId] = useState<string>('')
+  const [editingInitialData, setEditingInitialData] = useState<any>(null)
   const [successBanner, setSuccessBanner] = useState('')
 
   const productsPerPage = 10
@@ -68,14 +72,14 @@ export default function ProductsPage() {
     }
     const mapped = apiData.products.map((product: any) => ({
       id: product.id,
-      name: product.name,
-      description: product.description,
+      name: String(product.name || ''),
+      description: String(product.description || ''),
       price: parseFloat(product.price),
       originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
       // 修复：优先使用分类名称
       category: product.category?.name || product.categoryId,
       // 新增：品牌中文优先取后端 brandText
-      brand: product.brandText || '未知品牌',
+      brand: String(product.brandText || '未知品牌'),
       stock: product.stock,
       // 新增：优先使用后端提供的 status
       status: product.status || (product.stock === 0 ? 'out_of_stock' : (product.isActive ? 'active' : 'inactive')),
@@ -92,9 +96,10 @@ export default function ProductsPage() {
 
   // 过滤商品
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+    const searchTermLower = safeLower(searchTerm)
+    const matchesSearch = safeLower(product.name).includes(searchTermLower) ||
+                         safeLower(product.description).includes(searchTermLower) ||
+                         safeLower(product.brand).includes(searchTermLower)
     const matchesCategory = filterCategory === 'all' || product.category === filterCategory
     const matchesStatus = filterStatus === 'all' || product.status === filterStatus
     
@@ -126,14 +131,14 @@ export default function ProductsPage() {
   const handleProductAdded = (newProduct: any) => {
     const formattedProduct = {
       id: newProduct.id,
-      name: newProduct.name,
-      description: newProduct.description,
+      name: String(newProduct.name || ''),
+      description: String(newProduct.description || ''),
       price: parseFloat(newProduct.price),
       originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
       // 修复：优先使用分类名称
       category: newProduct.category?.name || newProduct.categoryId,
       // 新增：品牌中文优先取后端 brandText
-      brand: newProduct.brandText || '未知品牌',
+      brand: String(newProduct.brandText || '未知品牌'),
       stock: newProduct.stock,
       // 新增：优先使用后端提供的 status
       status: newProduct.status || (newProduct.stock === 0 ? 'out_of_stock' : (newProduct.isActive ? 'active' : 'inactive')),
@@ -161,14 +166,14 @@ export default function ProductsPage() {
           if (result.success && result.data?.products) {
             const formattedProducts: Product[] = result.data.products.map((product: any) => ({
               id: product.id,
-              name: product.name,
-              description: product.description,
+              name: String(product.name || ''),
+              description: String(product.description || ''),
               price: parseFloat(product.price),
               originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : undefined,
               // 修复：优先使用分类名称
               category: product.category?.name || product.categoryId,
               // 新增：品牌中文优先取后端 brandText
-              brand: product.brandText || '未知品牌',
+              brand: String(product.brandText || '未知品牌'),
               stock: product.stock,
               // 新增：优先使用后端提供的 status
               status: product.status || (product.stock === 0 ? 'out_of_stock' : (product.isActive ? 'active' : 'inactive')),
@@ -186,6 +191,49 @@ export default function ProductsPage() {
     }
     
     fetchProducts()
+  }
+
+  // 打开编辑弹窗：拉取详情并预填
+  const openEditModal = async (id: string) => {
+    try {
+      setEditingProductId(id)
+      const res = await fetch(`/api/products/${id}`, { credentials: 'include' })
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setEditingInitialData(result.data)
+        setShowEditModal(true)
+      } else {
+        alert(result.message || '获取商品详情失败')
+      }
+    } catch (e) {
+      console.error('打开编辑弹窗失败:', e)
+      alert('网络错误，稍后重试')
+    }
+  }
+
+  const handleProductEdited = (updated: any) => {
+    if (!updated) return
+    const formattedProduct = {
+      id: updated.id,
+      name: String(updated.name || ''),
+      description: String(updated.description || ''),
+      price: parseFloat(updated.price),
+      originalPrice: updated.originalPrice ? parseFloat(updated.originalPrice) : undefined,
+      category: updated.category?.name || updated.categoryId,
+      brand: String(updated.brandText || '未知品牌'),
+      stock: updated.stock,
+      status: updated.status || (updated.stock === 0 ? 'out_of_stock' : (updated.isActive ? 'active' : 'inactive')),
+      image: updated.images?.[0] || '📦',
+      createdAt: new Date(updated.createdAt).toLocaleDateString(),
+      sales: updated.sold || 0,
+      rating: 4.5
+    }
+    // 乐观更新本地列表
+    setProducts(prev => prev.map(p => (p.id === formattedProduct.id ? formattedProduct : p)))
+    updateProduct(formattedProduct.id, formattedProduct)
+    setShowEditModal(false)
+    setSuccessBanner('Product updated successfully!')
+    setTimeout(() => setSuccessBanner(''), 3000)
   }
 
   const handleDeleteProduct = (productId: string) => {
@@ -501,7 +549,7 @@ export default function ProductsPage() {
                       <button className="text-blue-600 hover:text-blue-900">
                         <EyeIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button className="text-green-600 hover:text-green-900" onClick={() => openEditModal(product.id)}>
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
@@ -593,6 +641,20 @@ export default function ProductsPage() {
           onSuccess={handleProductAdded}
         />
       )}
+      {/* Edit product modal */}
+      {showEditModal && (
+        <AddProductModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={handleProductEdited}
+          initialData={editingInitialData}
+          productId={editingProductId}
+          mode="edit"
+        />
+      )}
     </div>
   )
 }
+
+// 安全小写转换，避免 null/undefined 调用 toLowerCase
+const safeLower = (v?: string) => (typeof v === 'string' ? v.toLowerCase() : '')

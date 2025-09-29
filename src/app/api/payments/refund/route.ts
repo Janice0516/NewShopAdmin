@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const refundResult = {
       status: 'completed',
       refundNumber,
-      amount: refundAmount
+      amount: Number(refundAmount)
     }
 
     // 更新订单状态
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       data: {
         refundNumber,
         status: refundResult.status,
-        amount: refundAmount
+        amount: Number(refundAmount)
       }
     })
   } catch (error) {

@@ -12,10 +12,13 @@ interface Category {
 interface AddProductModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: (newProduct?: any) => void
+  onSuccess: (product?: any) => void
+  initialData?: any
+  productId?: string
+  mode?: 'add' | 'edit'
 }
 
-export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSuccess, initialData, productId, mode = 'add' }: AddProductModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -34,6 +37,29 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  // 预填充编辑数据
+  useEffect(() => {
+    if (isOpen && mode === 'edit' && initialData) {
+      const imgs = Array.isArray(initialData.images)
+        ? initialData.images
+        : (typeof initialData.images === 'string'
+            ? (() => { try { const p = JSON.parse(initialData.images); return Array.isArray(p) ? p : [] } catch { return [] } })()
+            : [])
+      setFormData({
+        name: String(initialData.name || ''),
+        description: String(initialData.description || ''),
+        price: initialData.price !== undefined ? String(initialData.price) : '',
+        stock: initialData.stock !== undefined ? String(initialData.stock) : '',
+        categoryId: initialData.categoryId || initialData.category?.id || '',
+        images: imgs
+      })
+      setError('')
+      setSuccessMessage('')
+      setValidationErrors({})
+      setTouched({})
+    }
+  }, [isOpen, mode, initialData])
 
   const fetchCategories = async () => {
     try {
@@ -119,28 +145,51 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         images: formData.images.filter(img => img.trim() !== '')
       }
 
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(submitData)
-      })
+      if (mode === 'edit' && productId) {
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(submitData)
+        })
 
-      const result = await response.json()
+        const result = await response.json()
 
-      if (response.ok) {
-        onSuccess(result.data)
-        // 展示成功提示而不是立即关闭
-        setSuccessMessage('商品添加成功！您可以继续添加或关闭窗口。')
-        // 重置表单，方便继续添加
-        setFormData({ name: '', description: '', price: '', stock: '', categoryId: '', images: [] })
-      } else {
-        if (result.details) {
-          setValidationErrors(result.details)
+        if (response.ok) {
+          onSuccess(result.data)
+          onClose()
+        } else {
+          if (result.details) {
+            setValidationErrors(result.details)
+          }
+          setError(result.message || result.error || '更新商品失败')
         }
-        setError(result.message || result.error || '添加商品失败')
+      } else {
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(submitData)
+        })
+
+        const result = await response.json()
+
+        if (response.ok) {
+          onSuccess(result.data)
+          // 展示成功提示而不是立即关闭
+          setSuccessMessage('商品添加成功！您可以继续添加或关闭窗口。')
+          // 重置表单，方便继续添加
+          setFormData({ name: '', description: '', price: '', stock: '', categoryId: '', images: [] })
+        } else {
+          if (result.details) {
+            setValidationErrors(result.details)
+          }
+          setError(result.message || result.error || '添加商品失败')
+        }
       }
     } catch (error) {
       setError('网络错误，请重试')
@@ -153,7 +202,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">添加商品</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{mode === 'edit' ? '编辑商品' : '添加商品'}</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -170,7 +219,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </div>
         )}
 
-        {successMessage && (
+        {successMessage && mode !== 'edit' && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
             <div className="flex items-center justify-between">
               <span>{successMessage}</span>
@@ -332,7 +381,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? '添加中...' : '添加商品'}
+              {loading ? (mode === 'edit' ? '保存中...' : '添加中...') : (mode === 'edit' ? '保存修改' : '添加商品')}
             </button>
           </div>
         </form>

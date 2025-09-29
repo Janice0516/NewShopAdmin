@@ -64,8 +64,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    const normalizedOrders = orders.map(order => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      discountAmount: Number(order.discountAmount),
+      finalAmount: Number(order.finalAmount),
+      shippingFee: Number(order.shippingFee),
+      items: (order.items || []).map(item => ({
+        ...item,
+        price: Number(item.price),
+        product: item.product ? { ...item.product, price: Number(item.product.price) } : item.product
+      }))
+    }))
+    
     // 转换数据格式
-    const exportData = orders.map(order => ({
+    const exportData = normalizedOrders.map(order => ({
       '订单号': order.orderNo,
       '用户姓名': order.user.name || '',
       '用户邮箱': order.user.email,
@@ -77,10 +90,10 @@ export async function GET(request: NextRequest) {
       '商品明细': order.items.map(item => 
         `${item.product.name} x${item.quantity}`
       ).join('; '),
-      '订单金额': Number(order.totalAmount),
-      '优惠金额': Number(order.discountAmount),
-      '运费': Number(order.shippingFee),
-      '实付金额': Number(order.finalAmount),
+      '订单金额': order.totalAmount,
+      '优惠金额': order.discountAmount,
+      '运费': order.shippingFee,
+      '实付金额': order.finalAmount,
       '订单状态': getStatusText(order.status),
       '支付方式': order.paymentMethod || '',
       '备注': order.remark || '',

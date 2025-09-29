@@ -368,7 +368,7 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">已送达</p>
-              <p className="text-xl font-bold text-green-600">{stats.DELIVERED}</p>
+              <p className="text-xl font-bold text-green-600">{Number.isFinite(Number(stats.totalRevenue)) ? Number(stats.totalRevenue).toFixed(2) : '0.00'}</p>
             </div>
             <CheckCircleIcon className="h-8 w-8 text-green-400" />
           </div>
@@ -388,7 +388,7 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">总收入</p>
-              <p className="text-xl font-bold text-green-600">¥{stats.totalRevenue ? stats.totalRevenue.toFixed(2) : '0.00'}</p>
+              <p className="text-xl font-bold text-green-600">¥{Number.isFinite(Number(stats.totalRevenue)) ? Number(stats.totalRevenue).toFixed(2) : '0.00'}</p>
             </div>
             <CurrencyDollarIcon className="h-8 w-8 text-green-400" />
           </div>
@@ -549,7 +549,7 @@ export default function OrdersPage() {
                           {order.user.email}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {order.address.phone}
+                          {order.address?.phone || '未设置'}
                         </div>
                       </div>
                     </td>
@@ -570,11 +570,11 @@ export default function OrdersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          ¥{order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}
+                          ¥{Number.isFinite(Number(order.finalAmount)) ? Number(order.finalAmount).toFixed(2) : '0.00'}
                         </div>
                         {order.discountAmount > 0 && (
                           <div className="text-sm text-gray-500">
-                            优惠: -¥{order.discountAmount ? order.discountAmount.toFixed(2) : '0.00'}
+                            优惠: -¥{Number.isFinite(Number(order.discountAmount)) ? Number(order.discountAmount).toFixed(2) : '0.00'}
                           </div>
                         )}
                       </div>
@@ -727,7 +727,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">电话:</span>
-                      <span>{selectedOrder.address.phone}</span>
+                      <span>{selectedOrder.address?.phone || '未设置'}</span>
                     </div>
                   </div>
                 </div>
@@ -737,12 +737,12 @@ export default function OrdersPage() {
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-3">收货地址</h4>
                 <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                  <div className="font-medium">{selectedOrder.address.name}</div>
+                  <div className="font-medium">{selectedOrder.address?.name || '未设置'}</div>
                   <div className="text-gray-600 mt-1">
                     {selectedOrder.address.province} {selectedOrder.address.city} {selectedOrder.address.district}
                   </div>
-                  <div className="text-gray-600">{selectedOrder.address.detail}</div>
-                  <div className="text-gray-600 mt-1">{selectedOrder.address.phone}</div>
+                  <div className="text-gray-600">{selectedOrder.address?.detail || '未设置'}</div>
+                  <div className="text-gray-600 mt-1">{selectedOrder.address?.phone || '未设置'}</div>
                 </div>
               </div>
 
@@ -814,7 +814,7 @@ export default function OrdersPage() {
                   )}
                   <div className="border-t border-gray-200 pt-2 flex justify-between font-medium">
                     <span>实付金额:</span>
-                    <span className="text-lg">¥{selectedOrder.finalAmount ? selectedOrder.finalAmount.toFixed(2) : '0.00'}</span>
+                    <span className="text-lg">¥{Number.isFinite(Number(selectedOrder.finalAmount)) ? Number(selectedOrder.finalAmount).toFixed(2) : '0.00'}</span>
                   </div>
                 </div>
               </div>
